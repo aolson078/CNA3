@@ -1,0 +1,1057 @@
+# Land Movement
+
+# [8.0] LAND MOVEMENT
+
+GENERALRULE:
+In CNA, Land Movement is a function of the CPA
+of a unit. Most Movement occurs during the
+Movement Segment of the Movement/Combat
+Phase. During the Movement Segment, the Phas-
+ing Player (i.e., the Player who is in the process of
+moving) may move as many or as few of his units
+as he wishes. They may be moved in any direction
+or combination of directions, limited only by their
+CPA’s, enemy Zones of Control, Terrain restric-
+tions and, in the case of motorized units, Fuel con-
+sumption and Breakdown. Under certain con-
+ditions (Reaction and Retreat Before Assault) the
+non-Phasing Player may move his units.
+PROCEDURE:
+Units are moved one at a time, or in stacks, tracing
+a path of contiguous hexes through the hex grid.
+As a unit enters each hex it must expend a portion
+of its CPA for entering that hex or crossing a par-
+ticular hexside. All terrain costs are listed on the
+Terrain Effects Chart (8.37). In addition to Move-
+ment costs, Players must pay attention to Break-
+down costs for vehicles moving through certain
+hexes (see Section 21.0).
+
+---
+
+## [8.1] HOWTO MOVE
+
+UNITS
+
+---
+
+## [8.2] THE CONCEPT OF
+
+CONTINUA L MO VEMENT
+CNA
+uses
+a
+concept
+called
+“ Continual
+Movement” . Under this concept a given unit does
+not possess a set Movement Allowance which it
+may never exceed, as in most wargames. Rather a
+unit has a Capability Point Allowance. If a Phas-
+ing Player wishes to push his units past their CPA
+he may do so, knowing that it will affect that unit’s
+Cohesion. In Continual Movement a unit may
+continue to move after it has engaged in combat,
+moving and fighting as long as the Phasing Player
+wishes, within certain limits.
+Continual Movement generates certain problems
+in terms of Time-and-Space Relationships. The
+rules attempt to account for the fact that time
+passes while one unit is moving; that other units
+are not standing still.
+
+---
+
+## [8.3] TERRAIN EFFECTS
+
+ON MOVEMENT
+
+---
+
+## [8.4] SPECIAL TERRAIN EFFECTS
+
+ON MOVEMENT
+For those gamers used to Panzerarmee Afrika and
+Afrika Korps, the game-map of CNA will come as
+something of a shock and a revelation: there is ter-
+rain in all those empty spaces. And much of this
+terrain is unlike that of anywhere else on earth, br-
+inging with it special problems for both designer
+and player. The most important of these are
+discussed below.
+
+---
+
+## [8.5] REACTION
+
+Reaction is the capability of a unit to “ get out of
+the way” of an attacking unit or units before the
+enemy can launch an attack against the reacting
+unit. Reaction is movement conducted by the non-
+Phasing Player — as defender — in the opposing
+Player’s Movement/Combat Phase. A unit’s abili-
+ty to react is limited to certain specific situations.
+Reaction expends CP’s.
+
+---
+
+## [8.6] BREAKING OFF
+
+
+
+---
+
+## [8.7] RAIL MOVEMENT
+
+OF LAND UNITS
+
+---
+
+## [8.8] TRIPOLI AND TUNISIA
+
+
+
+---
+
+## [8.9] MOTORIZED UNITS/TRUCKS
+
+
+
+---
+
+### [8.11] Units may be moved voluntarily only dur-
+
+ing the Movement Segments or Retreat Before
+Assault Step. Voluntary movement may never
+take place out of the Sequence of Play. Players
+should note that while Player A may be the Phas-
+ing Player, Player B has several opportunities to
+move his units during A’s Segment. All move-
+ment, of any type, expends CP’s. Furthermore, if
+the unit moving is a vehicle (armored units, self-
+propelled artillery and trucks), the Player must
+check for possible Breakdown (see Section 21.0).
+Units may move freely through Friendly units,
+with the exception of movement along roads and
+tracks (see Case 8.34).
+
+---
+
+### [8.12] Under certain conditions — usually combat
+
+— a unit may be forced to Retreat. This is con-
+sidered involuntary movement, in that the retreat-
+
+
+
+
+ing Player does not move by his own choice but
+rather as a direct result of combat. However, in-
+voluntary movement also requires expenditure of
+CP’s and checks for Breakdown.
+
+---
+
+### [8.13] A unit may never enter a hex containing an
+
+enemy unit (see, however, Case 27.4). Further-
+more, movement from hex to hex must be con-
+secutive; units may not skip hexes. (There are, of
+course, different rules for aircraft.)
+
+---
+
+### [8.14] If a unit moves into an enemy Zone of Con-
+
+trol (10.0) it must stop immediately. It may move
+no further in that Movement Segment and will
+probably have to attack, in some form, the enemy
+unit exerting that Zone of Control.
+
+---
+
+### [8.15] A unit that begins a Movement Segment in
+
+an enemy Zone of Control may move out of that
+hex and continue movement under the following
+conditions:
+1. It may not move directly into an enemy Zone of
+Control (however, see Case 10.24); and
+2. It must pay a cost of two CP’s if the units are in
+“ Contact” (see Case 8.62); or
+3. It must pay a cost of four CP’s if the units are
+“ Engaged” (see Case 8.63).
+
+---
+
+### [8.16] Units may continue to move and fight as
+
+long as they wish, with certain restrictions (see
+Case 8.2). They may exceed their CPA in an
+Operations Stage; however this will affect their
+Cohesion Level.
+
+---
+
+### [8.17] (correction) The % in line three should be %150, not %50.
+
+
+
+---
+
+### [8.18] Second and Third Line Trucks (i.e., Truck
+
+Convoys; see Section 8.9) have their own Move-
+ment Phase: The Truck Convoy Movement Phase.
+Such trucks may not move (voluntarily) in the nor-
+mal movement segments. Only trucks directly at-
+tached to, and part of, a combat unit or HQ may
+move in the normal Movement Segments. Trucks
+become attached and/or detached in the Organiza-
+tion Segment of the Sequence of Play.
+
+---
+
+### [8.19] No Commonwealth Land unit may be mov-
+
+ed west of Marble Arch (A2109) at any time, for
+any reason. (This solves a great number of play-
+ing problems, and also reflects Commonwealth
+operations considerations and strategy.)
+
+---
+
+### [8.21] Units are not limited as to the number of
+
+times they may move and engage in combat during
+a given Operations Stage except for Cases 6.26,
+8.17, and 8.23. Thus, a unit may move adjacent to
+an Enemy unit, engage it in combat, move away
+(or stay), engage the same or another unit in com-
+bat, etc., as the Phasing Player wishes. The unit
+simply expends CP’s for all actions it performs.
+
+---
+
+### [8.22] Within a given Movement/Combat Phase
+
+there may be several segments of Movement and
+Combat. These are, to a certain extent, regi-
+mented. In essence, the Phasing Player moves his
+units. He then, after all such movement is com-
+pleted, resolves any combat. He may then again
+move any of his units (within the exceptions men-
+tioned in 8.21); after all movement at that time is
+completed any combat necessitated or desired is
+resolved. This cycle is repeated until the Phasing
+Player no longer wishes to move his units or have
+combat. Remember, no combat occurs until all
+movement has ceased within each Sequence of
+Movement and Combat.
+
+---
+
+### [8.23] (correction) The reference should be to 8.23, not 8.22.
+
+
+
+---
+
+### [8.24] A Phasing unit that begins any Move-
+
+ment/Combat Phase in the Zone of Control of an
+Enemy unit must expend two CP’s to break “ Con-
+tact” — or/ourC P’s, if such position was brought
+about by an “ Engaged” result on the Assault CRT
+— if it wishes to move. (Note, that in the case of an
+Engaged result, the presence of an enemy ZOC
+does not matter.)
+
+---
+
+### [8.25] A Friendly unit may attack a given Enemy
+
+unit more than once in a given Operations Stage,
+with neither unit ever moving! However, each
+combat occurs after all movement of other units
+cease. If there is no movement by any units, com-
+bat may still proceed for as long as the Phasing
+Player wishes, providing he has the necessary Am-
+munition and wishes to expend the required
+number of CP’s.
+
+---
+
+### [8.31] Units expend a varying number of CP’s to
+
+enter hexes or cross certain hexsides, depending
+upon the type of unit and/or what type of hex or
+hexside is involved. The costs range from Vi CP
+for roads (for motorized units) to + 8 for a vehicle
+to move down an escarpment via a track or an
+infantry-type unit to cross The Nile without a
+“ bridge” . See the Terrain Effects Chart for all ef-
+fects (8.9).
+
+---
+
+### [8.32] Certain types of hexes and/or hexsides are
+
+prohibited to certain types of units. E.g., certain
+vehicles may never enter a Salt Marsh hex, unless it
+is on a road or track.
+
+---
+
+### [8.33] Roads and Tracks may be used to facilitate
+
+movement through terrain obstacles and speed
+movement over the entire game-map. For a unit to
+gain any benefit from movement on a Road or
+Track it must move from one Road/Track hex
+directly into an adjacent, connecting Road/Track
+hex through a Road/Track hexside. Units which
+are moving along Roads or Tracks ignore, for
+movement purposes, any other terrain in the hex
+or hexside, with the exception of vehicles crossing
+Escarpments (see 8.42).
+
+---
+
+### [8.34] A unit comprised (at least in part) of
+
+vehicles (i.e., tanks, trucks, artillery, etc.) that is
+moving along a Road or Track is limited in its
+ability to move through other Friendly units on the
+Road or Track in that hex; see Case 9.33. Such
+moving units may always pass around Friendly
+units that are on a Road or Track by moving
+through the terrain in the hex, i.e., bypassing the
+units on the road by moving off the road and
+around them, going back on the road in the next
+hex.
+
+---
+
+### [8.35] Most of the terrain in CNA is self-
+
+explanatory, especially when the Terrain Effects
+Chart is consulted. However, at this point it would
+help to be able to visualize the difference between
+slopes, ridges and escarpments. An idealized side-
+view of each of the above types of terrain is provid-
+ed below so that players can see what is being
+abstracted:
+Slope
+Ridge
+Escarpment
+Slopes and Escarpments always have an “ up” side
+and a “ down” side (see the Terrain Key). The
+splash contours of the respective terrain symbols
+are always on the “ down” side of the slope or
+escarpment. Thus, when a unit is crossing a slope
+or escarpment hexside it is moving either up the
+slope/escarpment or down the slope/escarpment.
+Ridges have no “ direction” ; crossing a Ridge hex-
+side has the same effect regardless of which direc-
+tion the unit is coming from. In essence, ridges are
+two-sided slopes.
+
+---
+
+### [8.36] Certain types of terrain restrict combat or
+
+give the attacker or defender a combat benefit.
+These benefits are discussed throughout the sec-
+tions on Combat, but they are all summarized on
+the Terrain Effects Chart.
+
+---
+
+### [8.37] (correction, Terrain Effects Chart) The footnote (4) should be
+
+with Major City, not Swamp. (important correction) Footnote (8) is
+correct, not the number "1" listed on the chart. Tracks do not cost 1
+CP; they simply halve the cost of the terrain they're in.
+
+---
+
+### [8.41] Wadis. Wadis are, in essence, dried-out
+
+river beds. There are several major areas of wadis
+in North Africa. While the series of wadis that
+“ guards” the Libyan Sand Desert, south of
+Cyrenaica, is the largest group, perhaps the most
+important series of wadis are those extending like
+fingers from the Jebel Akhdar (game-map B).
+Along with the other difficult terrain in the area,
+the wadis of the Jebel Akhdar greatly hinder rapid
+movement.
+A//units expend CP’s to cross a Wadi hexside. (All
+wadis in CNA have been placed along hexsides,
+with the exception of the Wadi Natrun, just west
+of the Nile Delta, which is treated, for game-
+purposes, as if it were Salt Marsh.) In addition,
+there is a Breakdown Factor of eight for vehicles
+crossing a wadi hexside. Roads negate wadis for
+movement purposes, while Tracks halve the cost to
+cross. Vehicles crossing a Wadi on a Road use the
+Road Breakdown Rate ('A BP), while vehicles
+crossing on Tracks garner four BP’s, not eight.
+Players should note that in an Operations Stage in
+which the Weather is Rainstorm wadis in affected
+map sections are impassable at all points, except
+where they are traversed by roads. The cost to
+cross a rain-swollen wadi by Road is +2 CP’s;
+
+
+
+there is no additional Breakdown cost (i.e., it is
+still '/2 BP).
+
+---
+
+### [8.42] Escarpments. The escarpments, which
+
+were such an integral part of the Desert Campaign,
+are at the edge of the Libyan Plateau, which rises
+from the edge of the strip of land that borders the
+Mediterranean. In some places the rise is gradual;
+in others it is sharp and severe, virtually uncross-
+able by vehicles. Movement costs for crossing
+escarpment hexsides are listed in the Terrain Ef-
+fects Chart (8.37). However, other factors must be
+noted. No vehicle may ever move “ up” an escarp-
+ment (i.e., cross an escarpment hexside by moving
+from the down side to the up side). If a Track
+crosses an escarpment hexside, vehicles may use
+the Track to move down the escarpment, but never
+up. The cost for moving down via Track would be
++ 8 CP’s and six Breakdown Points.
+
+---
+
+### [8.43] Slopes and Ridges. These were discussed in
+
+8.35. All units may cross these hexsides at a variety
+of Movement and Breakdown costs; see8.37.
+
+---
+
+### [8.44] Salt Marsh. Salt marshes are depressions
+
+consisting of very fine and treacherous salty sand
+—a veritable quicksand grave for vehicles, and no
+fun for infantry either. Vehicles, except for Light
+Trucks, Recce-type units, and motorcycle infantry
+may enter or leave a Salt Marsh hex only on a Road
+or Track. A prohibited vehicle that enters a Salt
+Marsh hex without using the Track, whatever the
+reason, is Abandoned (see 5.33). Because most
+vehicles are prohibited from entering Salt Marshes
+in a normal manner, no motorized unit or AFV
+(tank, armored car, etc.) may ever engage in
+Assault with units defending in a Salt Marsh hex.
+The one camel unit in the game (the Italian
+Meharisti Camel Cavalry) travels as infantry in
+non-track Salt Marsh hexes, as these hexes could
+not support loaded camels.
+
+---
+
+### [8.45] Desert. Desert hexes, which comprise the
+
+area known as the Libyan Sand Desert, contain
+soft, shifting sand (as opposed to “ Clear” hexes,
+which have a clay-like substance more supportive
+of vehicular traffic.) Desert hexes are forbidden to
+Light Trucks, Motorcycle infantry, and motor-
+cycle Recce units whose weight was not sufficient
+enough to provide the traction necessary for mov-
+ing vehicles through the soft surface. Such units
+may not enter any Desert hexes, whether traversed
+by Tracks or not. See 8.37 for all terrain costs.
+
+---
+
+### [8.46] Tracks. The major communication net-
+
+work of the North African Plateau is the series of
+tracks that criss-cross the entire area. The tracks
+are useful not in that they are easier to walk or ride
+in (in some places they are no easier than the ter-
+rain in the hex); what they do provide is direction
+— i.e., which way to go. Sense of direction in the
+“ desert” is almost non-existent; the tracks provide
+that. Movement along tracks is at 1 CP per hex and
+halves most hexside crossing CP costs. In addi-
+tion, units using a track pay only one-half the nor-
+mal Breakdown cost for that hex.
+
+---
+
+### [8.47] Railroads and Roads. The use of these two
+
+are discussed quite succinctly in the body of the
+rules. However, Players should note that, on the
+game-map, there are large sections of railroad and
+some' roads that are not constructed as of
+September 1940 and must be constructed to exist.
+Specific later scenarios will list the hexes that have
+been constructed by that time. Unconstructed rail-
+road hexes are ignored for all purposes. Uncon-
+structed roads are treated as tracks.
+
+---
+
+### [8.48] Oases do not affect movement. But it might
+
+be worthwhile to point out here that Oases are con-
+sidered to be nondiminishing Supply Dumps for
+Water and Stores.
+
+---
+
+### [8.49] All of these terrain types also affect com-
+
+bat. However, such effects are discussed in the
+various combat Sections, especially 15.3.
+
+---
+
+### [8.51] Reaction is the process of movement by a
+
+Friendly, non-Phasing unit in response to an
+Enemy Combat unit moving adjacent to that
+Friendly, non-Phasing combat unit. Reaction
+follows all the standard rules of movement, except
+as stated below.
+
+---
+
+### [8.52] A given unit may React as many times as
+
+the Player wishes during an Operations Stage. A
+unit “ reacting” expends CP’s; however, it does
+not expend CP’s for Breaking Contact/Engaged,
+as defined in 8.24.
+
+---
+
+### [8.53] All units may react, with the following ex-
+
+ceptions:
+a. Non-motorized units, Squadron Ground Sup-
+port Units, and Truck Convoys not stacked with
+Friendly combat units may never React.
+b. No unit may React if the Enemy unit moving
+adjacent to it has a CPA six or more points greater
+than that of the non-Phasing unit and the owner of
+the Phasing unit announces there will be a Close
+Assault by his unit against the non-Phasing unit.
+Thus, a motorized infantry battalion may react
+when a tank battalion with a CPA of 25 moves ad-
+jacent to it, because a motorized unit will have a
+minimum CPA of 20 (from its trucks). However,
+if the same motorized battalion were to be moved
+adjacent to by an enemy Recce battalion, with a
+CPA of 45, the motorized battalion could not
+React. (It could still Retreat Before Assault,
+however; see Section 13.0). Furthermore, each
+units is treated individually; thus, Second Line
+Light Trucks stacked with (but not attached to)
+that motorized battalion could retreat (as they
+have an extended CPA of 40, only 5 less than 45).
+c. If a non-phasing unit is already in an enemy
+Zone of Control (usually as a result of (b) above) it
+may not React. In this way, faster units “ pin”
+slower units.
+d. A unit that is in combat or Engaged may not
+react.
+
+---
+
+### [8.54] Notwithstanding anything said in 8.53, no
+
+battalion size unit may ever pin a division and no
+company-size unit may ever pin a brigade or larger
+unit. The terms used here refer to size, and not
+specifically the unit type/designation. Size of unit
+may be determined by Stacking Points as well as the
+TOE. Thus a division may be but a skeleton force,
+as may other units. The problem should rarely oc-
+cur, as most units are fairly easy to jletermine as to
+size and type, but if there is a question use your
+Common Sense (or flip a coin if that commodity is
+in short supply). See Section 9.2.
+
+---
+
+### [8.55] Reacting units may never enter an Enemy
+
+Zone of Control during their Reaction Movement.
+Otherwise, Reaction is undertaken like normal
+movement, with no limit as to how far a unit may
+React/Move.
+
+---
+
+### [8.56] A unit may react, within the restrictions
+
+listed in 8.53 above, even if it is attached to a
+parent formation. In this case, the CP is expended
+for detachment and the unit may then react. A
+brigade HQ may not be detached from a division
+unless all of the units at present attached to the
+brigade HQ are also detached. In addition, the
+detachment of units may not be performed such
+that the parent unit is now “ pinned” as a result of
+its becoming a shell and having Case 8.54 now ap-
+ply. Attached trucks may be freely divided
+amongst the parent unit and its detaching and
+reacting units. Note that this rule does not permit a
+parent unit to detach low CPA units in order for
+the parent unit to now be able to react.
+
+---
+
+### [8.61] Breaking Off is a function of Movement
+
+that occurs when a unit beings a Friendly Move-
+ment Segment in Contact or Engaged with an
+Enemy Combat unit. Contact and Engaged
+markers are provided to indicate such status.
+(There has been some discussion of this in 8.24; see
+also Case 15.81).
+
+---
+
+### [8.62] Units are in Contact if they are in an Enemy
+
+Zone of Control at the beginning of a Movement
+Segment.
+
+---
+
+### [8.63] Units are Engaged directly as a result of
+
+Close Assault; Engaged is a combat result. Engag-
+ed units do not necessarily have to be in Enemy
+Zones of Control.
+
+---
+
+### [8.64] A unit in Contact or Engaged with an
+
+Enemy combat unit at the beginning of a Move-
+ment Segment or a Retreat Before Assault (not
+Reaction) may not move until it has paid a cost in
+CP’s to break off such contact. In addition, First
+Line Trucks wishing to detach from an Engaged or
+Contacted parent unit must expend the necessary
+CP’s to so detach. Second/Third Line Trucks
+wishing to attach as First Line Trucks to Engaged
+or Contacted units do not expend additional CP’s
+to so attach.
+
+---
+
+### [8.65] A unit in Contact must expend two CP’s to
+
+Break Off before moving.
+
+---
+
+### [8.66] A unit that is Engaged must expend four
+
+CP’s to Break Off before moving.
+
+---
+
+### [8.67] When all of the Friendly units that were in
+
+Contact or Engaged with an Enemy combat unit
+Break Off that Enemy unit is no longer Engaged or
+in Contact.
+
+---
+
+### [8.68] Contact and Engaged markers affect only
+
+the combat units in the hex at the time of their
+placement. Units moving into a hex with a Contact
+or Engaged marker are not affected by that
+marker.
+
+---
+
+### [8.71] (clarification) The rail lines may be used by the Axis Player
+
+under Section 54.4. The latter rules was added just as the game went to
+press; thus the seeming paradox.)
+
+---
+
+### [8.72] The Commonwealth Player may use Rail
+
+Movement once per Operations Stage, in the
+Commonwealth Rail Movement Phase. He may
+transport units and/or supplies, and he may move
+one “ stack” of these any distance along the rail
+line in each direction. Thus, a unit may be moved
+west from Alexandria to any rail hex along a
+finished rail line as far as (eventually) Tobruk, and
+supplies in Tobruk maybe moved east to Matruh.
+
+---
+
+### [8.73] (additional rule) Units travelling by railroad may not earn any
+
+re-organization points in the Stage that they do so.
+
+---
+
+### [8.74] The Commonwealth Player may use his
+
+railroad lines once in each direction. I.e., he may
+carry one unit (or stack) as far as he wishes in an
+easterly direction and another stack (or perhaps
+supplies) as far as he wishes in a westerly direction.
+
+---
+
+### [8.75] The maximum number of Stacking Points
+
+that may be carried by Rail Movement is two.
+(Thus large Brigades must be broken down for
+Rail Movement). For supply maximums, see Sec-
+tion 49.3.
+
+---
+
+### [8.76] Rail hexes that have been destroyed by
+
+bombing, etc. may not be entered by Rail Move-
+ment until they are repaired. Likewise, the rail
+hexes not yet in existence (8.47) can not be used un-
+til they have been constructed (see Case 24.6).
+
+---
+
+### [8.77] Units may be picked up and dropped off
+
+anywhere along a rail line, as long as the Stacking
+and directional restrictions are always observed
+and no unit using rail has expended CP’s in that
+Operational Stage.
+
+---
+
+### [8.78] No Rail hex west of any rail hex occupied
+
+by an Axis combat unit may be used by the Allied
+Player for Railroad Movement.
+
+---
+
+### [8.81] The area around Tripoli and Tunisia, both
+
+important entry ports for Axis troops and sup-
+plies, are represented by a series of four large
+boxes and a number of smaller boxes on the
+western edge of game-map section A. Each large
+box represents a specific region, centered around
+the geographical name in the box: Tripolitania,
+Tripoli, Gabes, and Tunis. References to these
+boxes as a group are indicated by the term
+“ Tripoli/Tunisia boxes.” The smaller boxes are
+used to represent the location of units in transit
+between the Tripoli/Tunisia boxes.
+
+---
+
+### [8.82] Only Axis units and Commonwealth
+
+airplanes may enter the Tripoli/Tunisia region.
+No Commonwealth land or sea unit may ever enter
+any of the boxes.
+
+---
+
+### [8.83] Air movement to/from the area is perform-
+
+ed as per the standard Air Rules, with the distances
+listed in the Air Distance Chart. Land movement
+among the Tripoli/Tunisia boxes and the boxes
+and the North Africa proper of the game map has
+been abstracted. The distance traveled is measured
+by the number of Operation Stages in which a land
+unit must expend its Capability Point Allowance
+in movement. Motorized units are required to con-
+sume fuel but are not required to check for
+breakdown during movement in, to and from this
+off-map region. A unit must expend exactly its
+Capability Point Allowance in each Operations
+Stage of movement in, to, or from the off-map
+region.
+
+---
+
+### [8.84] The number of Operation Stages of move-
+
+ment required by a specific unit in order to traverse
+the distance between the various Tripoli/Tunisia
+boxes and the map depends upon it Capability
+Point Allowance. The movement “ rates” for units
+in the off-map region is listed in the Off-Map Land
+Unit Movement Distance Chart (8.89). A unit be-
+ing moved from one Tripoli/Tunisia box (or hex A
+2802, see Case 8.85) to another that can traverse
+the distance in a single Operations Stage is simply
+placed in its new location and the required fuel is
+expended. If the unit cannot cover the distance in a
+single Operations Stage of movement, it is moved
+one In Transit box for each Operations State it is
+moved until the required number of Operations
+Stages of movement have been completed. Note
+that a unit In Transit is not required to be moved
+each Operation Stage and that such a unit may
+reverse its direction, returning to its original star-
+ting location.
+
+---
+
+### [8.85] For a unit to be moved off the game map
+
+towards Tripolitania it must start that Operations
+Stage in hex A2802. A unit entering the game-map
+from the off-map region is simply placed in the
+Road hex closest to the Tripolitania box. If there
+are more than five Stacking Points that are to be
+brought onto the map, they may be strung out on
+the Road in consecutive hexes (road) from the
+Tripolitania box; e.g., 5 points in hex 2802, 5
+points in 2803, and 3 points in 2804.
+
+---
+
+### [8.86] (important correction) This is a mistake, and is directly
+
+opposite to what it should say. Such reinforcements, etc., may move in
+the Stage of their arrival.
+
+---
+
+### [8.87] There are no stacking restrictions and
+
+unlimited Water in the Tripoli/Tunisia boxes and
+the
+In
+Transit
+boxes.
+In
+addition,
+the
+Tripoli/Tunisia boxes are considered to contain
+air facilities, non-transferrable supplies and
+maintenance crews sufficient for every plane the
+Axis Player has.
+
+---
+
+### [8.88] The Tripoli/Tunisia boxes are considered
+
+to be Supply Dumps of unlimited capacity.
+However, a truck or motorization point may not
+be moved in the Operations Stage in which it loads
+and/or unloads supplies.
+
+---
+
+### [8.89] OFF-MAP LAND UNIT
+
+MOVEMENT
+DISTANCE CHART
+Entry/Exit
+Air
+Distance to
+Maximum
+Hex
+Facility
+Entry/Exit Hex
+Squadrons
+.2'
+Port Said*
+
+
+E3433
+Abu Seier
+
+
+E3433
+Ismailia
+M jigM lM
+
+E1833
+Fayid
+ii
+
+El 833
+Deversoir
+
+
+E1833
+Kabrit
+
+
+E0127
+Ethiopia!
+Unlimited
+♦Flying Boat Basin. |No planes may be based here until the first
+OpStage of Game-Turn 35.
+Gabes
+Gabes
+I
+,
+,
+ih'.olninia
+i uioiiiani.'
+. . .
+. : b
+Nofilia
+4/5/14
+3/3/9
+2/2/6
+l/i/3
+Numbers represent number of Operations Stages of con-
+tinuous movement required for a unit to complete its
+movement'between indicated places. Number refer respec-
+tively to units with a CPA of 25 or more/15 to 20/ less than
+15. Note that a unit may not exceed its Basic CPA during
+off-map movement.
+
+---
+
+### [8.91] A motorized unit in CNA is one that always
+
+contains enough vehicles to transport the entire
+unit as a single entity. Motorized units include
+those comprised of mechanized (i.e., tracked)
+vehicles, trucks, and motorcycles. Motorized units
+are divided into those that are inherently motoriz-
+ed (whose transportation vehicles may not normal-
+ly be removed) and those that are being
+transported by truck points assigned to that pur-
+pose.
+
+---
+
+### [8.92] Non-motorized units (i.e., “ leg” infantry
+
+and a few gun units, with the exception of the
+Meharisti Cavalry (camels), may be transformed
+into motorized units (and visa versa) by the addi-
+tion/(subtraction) of sufficient Truck Points.
+When being transported by trucks, a non-
+motorized unit’s CPA becomes that of the ap-
+propriate rating of the truck that is transporting it.
+
+---
+
+### [8.93] Certain non-motorized infantry units are
+
+designated as being historically normally supplied
+with enough vehicles to motorize the entire unit.
+These infantry units are so indicated by a “ + ”
+symbol after their CPA on the Unit Characteristics
+Chart. These units’ characteristics differ only
+slightly with respect to their historically non-
+motorized brothers (see Cases 19.9 and 32.54).
+
+---
+
+### [8.94] A motorized unit maintains its CPA even if
+
+it is performing an action which is impossible
+while actually in a vehicle. Examples: A towed
+(inherently) motorized artillery unit Barraging, an
+infantry unit receiving defensive benefits from for-
+tifications, a motorized infantry unit assaulting in-
+to a salt marsh hex.
+
+---
+
+### [8.95] Truck Points may be used to transport
+
+TOE Strength Points or supplies. Truck Points
+represented by a counter (for example: all of the
+Truck Points attached to an infantry division
+which is represented on the game map by its HQ
+counter) are assigned transportation duties in-
+dividually.
+Example: An infantry Battalion of six TOE
+Strength Points with 10 light, 10 Medium and 10
+Heavy Truck Points attached might assign 4 light,
+two medium and one heavy Truck Points to the in-
+fantry in order to completely motorize the unit
+(this is inefficient, but variations on this theme will
+inevitably occur). Note that Truck Points are
+never required to transport anything, they may
+move around empty.
+
+---
+
+### [8.96] Truck Points may be attached to any unit in
+
+CNA bearing a historical designation. When at-
+tached they are represented by the unit’s counter.
+However, trucks are automatically under the con-
+trol of the highest (largest) ranking Parent Forma-
+tion to which they are currently attached. Exam-
+ple: A Truck Point attached to a battalion which is
+subsequently attached to a brigade become the
+property of that brigade. It is not necessary to sub-
+divide the trucks among the brigade’s component
+units.
+
+---
+
+### [8.97] (clarification) It seems a line was dropped here. What it means
+
+to say is that in the rule embodied in the second sentence, a number of
+trucks may be detached to go along with those detached units.
+
+---
+
+### [8.98] During the owning Player’s Player-Turn,
+
+trucks that are attached to units move with those
+units in the Movement and Combat Phase, and
+trucks that are not attached to units are moved in
+the Truck Convoy Phase, In either case, trucks
+may be permitted to move during the opposing
+Player’s Player-Turn (Reaction, etc.) Trucks that
+are moved in the Truck Convoy Phase may not ex-
+ceed their CPA. If forced to through involuntary
+movement, they are captured instead. Truck
+Points being moved in the Truck Convoy Phase
+may be moved in any order, group sub-division,
+stops and starts. The only restriction being that
+Truck Points beginning and ending in the same
+hex and following the same path of travel must be
+moved as a group. Example: Fifty Truck Points
+begin in C2510. They are moved as a group (not re-
+quired) to C2515 at which point 20 are moved to
+C2520 where they end their movement for that
+Truck Convoy Phase. The 30 Truck Points left in
+C2515 may now be moved (and sub-divided fur-
+ther if you wish). Note that this differentiates them
+from units detached from Parent Units (see Case
+19.44)
+
+---
+
+### [8.99] (note) This section is as clear as a marble block. However, the
+
+information imparted is mostly suggestion. We're pretty sure you know
+how to use markers.

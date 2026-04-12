@@ -1,1 +1,3 @@
 *.pdf
+_raw_extracted.txt
+extract_rules.py
