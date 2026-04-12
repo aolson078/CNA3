@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Pre-commit hook: verify Case-number citations in docstrings.
+# Install with: git config core.hooksPath .githooks
+
+PYTHON="C:/Users/Alex/anaconda3/python.exe"
+SCRIPT="scripts/check_case_citations.py"
+
+# Collect staged .py files under the directories we care about
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | \
+    grep -E '^(cna/rules/|cna/data/tables/).*\.py$' | \
+    grep -v '__init__\.py$')
+
+# If no relevant files are staged, pass through
+if [ -z "$STAGED_FILES" ]; then
+    exit 0
+fi
+
+echo "Checking Case citations in staged files..."
+
+# Pass the staged files as arguments to the checker
+# shellcheck disable=SC2086
+"$PYTHON" "$SCRIPT" $STAGED_FILES
+exit $?

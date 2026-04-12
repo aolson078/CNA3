@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Alex/.claude/skills/skill-creator/**)",
+      "Read(//c/Users/Alex/.claude/plugins/marketplaces/claude-plugins-official/plugins/claude-code-setup/skills/claude-automation-recommender/references/**)",
+      "Read(//c/Users/Alex/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Alex\\Desktop\\CNA\\.claude"
+    ]
+  }
+}
