@@ -110,9 +110,34 @@ def test_player_accessor():
 
 def test_log_append():
     gs = GameState()
-    gs.log("started turn")
-    gs.log("rolled weather")
-    assert gs.turn_log == ["started turn", "rolled weather"]
+    gs.active_side = Side.AXIS
+    e1 = gs.log("started turn")
+    e2 = gs.log("rolled weather", category="weather", data={"result": 22})
+    assert len(gs.turn_log) == 2
+    assert e1.seq == 0 and e2.seq == 1
+    assert e1.message == "started turn"
+    assert e2.category == "weather"
+    assert e2.data == {"result": 22}
+    # Context auto-populated.
+    assert e1.turn == gs.game_turn
+    assert e1.phase == gs.phase
+    assert e1.side == Side.AXIS
+
+
+def test_log_side_override():
+    gs = GameState()
+    gs.active_side = Side.AXIS
+    entry = gs.log("cw reacts", side=Side.COMMONWEALTH)
+    assert entry.side == Side.COMMONWEALTH
+
+
+def test_recent_log():
+    gs = GameState()
+    for i in range(5):
+        gs.log(f"event {i}")
+    tail = gs.recent_log(3)
+    assert [e.message for e in tail] == ["event 2", "event 3", "event 4"]
+    assert gs.recent_log(0) == []
 
 
 def test_maphex_default_terrain_is_desert():

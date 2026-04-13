@@ -27,6 +27,7 @@ from cna.engine.game_state import (
     CohesionLevel,
     GameState,
     HexCoord,
+    LogEntry,
     MapHex,
     OperationsStage,
     Phase,
@@ -137,6 +138,17 @@ class DiceRollerModel(BaseModel):
     roll_log: list[dict[str, Any]] = Field(default_factory=list)
 
 
+class LogEntryModel(BaseModel):
+    seq: int
+    turn: int
+    stage: OperationsStage | None = None
+    phase: Phase
+    side: Side | None = None
+    message: str
+    category: str = ""
+    data: dict[str, Any] = Field(default_factory=dict)
+
+
 class GameStateModel(BaseModel):
     schema_version: int
     scenario_id: str = ""
@@ -149,7 +161,7 @@ class GameStateModel(BaseModel):
     map: list[MapHexModel] = Field(default_factory=list)
     units: list[UnitModel] = Field(default_factory=list)
     dice: DiceRollerModel = Field(default_factory=DiceRollerModel)
-    turn_log: list[str] = Field(default_factory=list)
+    turn_log: list[LogEntryModel] = Field(default_factory=list)
     extras: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -269,8 +281,34 @@ def _state_to_model(state: GameState) -> GameStateModel:
         map=[_hex_to_model(h) for h in state.map.values()],
         units=[_unit_to_model(u) for u in state.units.values()],
         dice=DiceRollerModel(seed=state.dice.seed, roll_log=list(state.dice.roll_log)),
-        turn_log=list(state.turn_log),
+        turn_log=[_log_to_model(e) for e in state.turn_log],
         extras=_coerce_extras(state.extras),
+    )
+
+
+def _log_to_model(e: LogEntry) -> LogEntryModel:
+    return LogEntryModel(
+        seq=e.seq,
+        turn=e.turn,
+        stage=e.stage,
+        phase=e.phase,
+        side=e.side,
+        message=e.message,
+        category=e.category,
+        data=_coerce_extras(e.data),
+    )
+
+
+def _log_from_model(m: LogEntryModel) -> LogEntry:
+    return LogEntry(
+        seq=m.seq,
+        turn=m.turn,
+        stage=m.stage,
+        phase=m.phase,
+        side=m.side,
+        message=m.message,
+        category=m.category,
+        data=dict(m.data),
     )
 
 
@@ -291,7 +329,7 @@ def _state_from_model(m: GameStateModel) -> GameState:
         map={_coord_from_model(h.coord): _hex_from_model(h) for h in m.map},
         units={u.id: _unit_from_model(u) for u in m.units},
         dice=dice,
-        turn_log=list(m.turn_log),
+        turn_log=[_log_from_model(e) for e in m.turn_log],
         extras=dict(m.extras),
     )
     return state

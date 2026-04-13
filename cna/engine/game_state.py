@@ -26,6 +26,11 @@ from typing import Optional
 from cna.engine.dice import DiceRoller
 
 
+# Sentinel used by GameState.log() to distinguish "no argument provided"
+# (→ default to active_side) from "explicit None" (→ side-agnostic entry).
+_UNSET: object = object()
+
+
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
@@ -381,6 +386,43 @@ class Player:
 
 
 # ---------------------------------------------------------------------------
+# Log entries
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class LogEntry:
+    """A single structured entry in the game-turn log.
+
+    Structured (rather than plain strings) so the dashboard can filter,
+    color, and group entries by phase and side. Written via GameState.log(),
+    which populates the turn/stage/phase/side context automatically.
+
+    Attributes:
+        seq: Monotonic sequence number within this GameState's log.
+        turn: Game-Turn when the entry was written (Case 5.1).
+        stage: Operations Stage at the time, or None for pre-game / global
+            events.
+        phase: Phase at the time (Case 5.2).
+        side: Acting side, or None if the event is side-agnostic.
+        message: Human-readable description.
+        category: Optional tag for filtering ("combat", "movement", "supply",
+            "weather", "system", ...).
+        data: Optional structured payload (dice rolls, unit ids, hexes).
+            Must be JSON-serializable for save round-trip.
+    """
+
+    seq: int
+    turn: int
+    stage: Optional["OperationsStage"]
+    phase: "Phase"
+    side: Optional[Side]
+    message: str
+    category: str = ""
+    data: dict[str, object] = field(default_factory=dict)
+
+
+# ---------------------------------------------------------------------------
 # GameState
 # ---------------------------------------------------------------------------
 
@@ -423,7 +465,7 @@ class GameState:
     map: dict[HexCoord, MapHex] = field(default_factory=dict)
     units: dict[str, Unit] = field(default_factory=dict)
     dice: DiceRoller = field(default_factory=DiceRoller)
-    turn_log: list[str] = field(default_factory=list)
+    turn_log: list[LogEntry] = field(default_factory=list)
     extras: dict[str, object] = field(default_factory=dict)
 
     # -- accessors -------------------------------------------------------
@@ -447,6 +489,40 @@ class GameState:
         except KeyError as exc:  # pragma: no cover - defensive
             raise LookupError(f"No player configured for side {side}") from exc
 
-    def log(self, message: str) -> None:
-        """Append a line to the turn log."""
-        self.turn_log.append(message)
+    def log(
+        self,
+        message: str,
+        *,
+        side: Optional[Side] | "object" = _UNSET,
+        category: str = "",
+        data: Optional[dict[str, object]] = None,
+    ) -> LogEntry:
+        """Append a structured entry to the turn log.
+
+        Automatically captures current turn / stage / phase. If *side* is
+        omitted, defaults to the current active_side. Pass side=None
+        explicitly to record a side-agnostic (global) event such as
+        weather or end-of-turn bookkeeping.
+        """
+        if side is _UNSET:
+            resolved_side: Optional[Side] = self.active_side
+        else:
+            resolved_side = side  # type: ignore[assignment]
+        entry = LogEntry(
+            seq=len(self.turn_log),
+            turn=self.game_turn,
+            stage=self.operations_stage,
+            phase=self.phase,
+            side=resolved_side,
+            message=message,
+            category=category,
+            data=dict(data) if data else {},
+        )
+        self.turn_log.append(entry)
+        return entry
+
+    def recent_log(self, n: int = 10) -> list[LogEntry]:
+        """Return the last *n* log entries (most recent last)."""
+        if n <= 0:
+            return []
+        return self.turn_log[-n:]

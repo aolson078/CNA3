@@ -66,7 +66,8 @@ def _populated_state() -> GameState:
     )
     gs.units = {u.id: u}
     gs.dice.seed = 42
-    gs.turn_log = ["turn start", "weather clear"]
+    gs.log("turn start", category="system")
+    gs.log("weather clear", category="weather", data={"roll": 11})
     gs.extras = {"ammo_pool": {"axis": 5, "cw": 3}}
     return gs
 
@@ -123,6 +124,18 @@ def test_roundtrip_preserves_dice_seed_and_log():
     # roll_log entries should round-trip (list of dicts of JSON-safe values).
     assert len(restored.dice.roll_log) == len(before)
     assert restored.dice.roll_log[0]["mode"] == before[0]["mode"]
+
+
+def test_roundtrip_preserves_turn_log():
+    gs = _populated_state()
+    restored = from_json(to_json(gs))
+    assert len(restored.turn_log) == 2
+    e0, e1 = restored.turn_log
+    assert e0.message == "turn start"
+    assert e0.category == "system"
+    assert e1.data == {"roll": 11}
+    assert e1.turn == gs.game_turn
+    assert e1.phase == gs.phase
 
 
 def test_roundtrip_preserves_extras():
