@@ -46,6 +46,7 @@ from cna.rules.initiative import (
     handle_initiative_declaration_phase,
     handle_initiative_determination_phase,
 )
+from cna.rules.combat.resolver import CombatReport, resolve_combat
 from cna.rules.land_movement import move_unit, validate_move, MoveResult
 from cna.rules.reserves import handle_reserve_release
 from cna.rules.special.weather import handle_weather_phase
@@ -62,6 +63,8 @@ class Key(str, Enum):
     """Named keys the app recognizes."""
     NEXT = "n"
     MOVE = "m"
+    COMBAT = "c"
+    PROBE = "p"
     SAVE = "s"
     LOAD = "l"
     QUIT = "q"
@@ -136,6 +139,8 @@ def _can_use_raw_input() -> bool:
 _HINTS_NORMAL: list[tuple[str, str]] = [
     ("n", "next phase"),
     ("m", "move unit"),
+    ("c", "combat"),
+    ("p", "probe"),
     ("arrows", "select hex"),
     ("tab", "cycle hexes"),
     ("v", "swap viewer"),
@@ -426,6 +431,73 @@ class App:
             category="system",
         )
 
+    def _do_combat(self, *, is_probe: bool = False) -> None:
+        """Resolve combat from the selected hex against an adjacent enemy.
+
+        Case 11.0 — Finds the first adjacent hex containing enemy units
+        and runs the full combat sequence (barrage → anti-armor → close
+        assault). Only available during the Movement & Combat phase.
+
+        In the full interactive UI, the player would select which hex to
+        attack, assign forces, and choose targets. Layer 1 automates
+        these choices: all units at the selected hex attack the first
+        adjacent enemy hex.
+        """
+        if self.selected is None:
+            self.state.log("No hex selected for combat", side=None, category="system")
+            return
+        if self.state.phase != Phase.MOVEMENT_AND_COMBAT:
+            self.state.log(
+                "Combat only during Movement & Combat phase",
+                side=None, category="system",
+            )
+            return
+
+        active = self.state.active_side
+        friendly = [u for u in self.state.units_at(self.selected) if u.side == active]
+        if not friendly:
+            self.state.log(
+                f"No {active.value} units at selected hex", category="system",
+            )
+            return
+
+        # Find the first adjacent hex with enemy units.
+        from cna.engine.hex_map import HexMap
+        hex_map = HexMap(self.state.map)
+        enemy_side = self.state.enemy(active)
+        target_hex = None
+        for nb in hex_map.neighbors_in_bounds(self.selected):
+            enemy_here = [u for u in self.state.units_at(nb) if u.side == enemy_side]
+            if enemy_here:
+                target_hex = nb
+                break
+
+        if target_hex is None:
+            self.state.log("No adjacent enemy units to attack", category="system")
+            return
+
+        self._push_undo()
+        try:
+            report = resolve_combat(
+                self.state, self.selected, target_hex, is_probe=is_probe,
+            )
+            label = "Probe" if is_probe else "Assault"
+            self.state.log(
+                f"{label} {self.selected}→{target_hex}: {report.summary}",
+                category="combat",
+                data={
+                    "attacker_hex": str(self.selected),
+                    "defender_hex": str(target_hex),
+                    "att_toe_lost": report.attacker_toe_lost,
+                    "def_toe_lost": report.defender_toe_lost,
+                    "att_cp": report.attacker_cp_spent,
+                    "def_cp": report.defender_cp_spent,
+                    "is_probe": is_probe,
+                },
+            )
+        except Exception as exc:
+            self.state.log(f"Combat failed: {exc}", side=None, category="system")
+
     # -- dispatch --------------------------------------------------------
 
     def _handle_key(self, key: Key) -> None:
@@ -435,6 +507,10 @@ class App:
                 self._do_next_phase()
             case Key.MOVE:
                 self._do_move()
+            case Key.COMBAT:
+                self._do_combat(is_probe=False)
+            case Key.PROBE:
+                self._do_combat(is_probe=True)
             case Key.SAVE:
                 self._do_save()
             case Key.LOAD:
