@@ -72,3 +72,65 @@ class RetreatLimits:
         if adjacent_to_enemy:
             return RetreatLimits(max_cp=9999, min_hexes=0)
         return RetreatLimits(max_cp=MAX_CP_NON_ADJACENT, min_hexes=1)
+
+
+# ---------------------------------------------------------------------------
+# Retreat path validation (Case 13.2)
+# ---------------------------------------------------------------------------
+
+
+def retreat_path_valid(
+    state: "GameState",
+    unit: Unit,
+    path: list["HexCoord"],
+) -> list[str]:
+    """Validate a proposed retreat path.
+
+    Case 13.2 — Retreat must follow normal movement rules except:
+    - Cannot retreat into enemy ZoC (Case 10.23).
+    - Must be consecutive hexes.
+    - Cannot enter enemy-occupied hexes.
+
+    Returns list of violation descriptions (empty = valid).
+    """
+    from cna.engine.game_state import GameState, HexCoord
+    from cna.engine.hex_map import HexMap, is_adjacent
+    from cna.rules.zones_of_control import is_enemy_zoc
+
+    errors: list[str] = []
+    if not path or len(path) < 2:
+        return errors
+
+    hex_map = HexMap(state.map)
+    for i in range(1, len(path)):
+        prev, cur = path[i - 1], path[i]
+        if not is_adjacent(prev, cur):
+            errors.append(f"{prev} → {cur} not adjacent (Case 13.2)")
+        if cur not in hex_map:
+            errors.append(f"{cur} is off-map")
+            continue
+        enemy = [u for u in state.units_at(cur) if u.side != unit.side]
+        if enemy:
+            errors.append(f"{cur} enemy-occupied (Case 8.13)")
+        if is_enemy_zoc(state, cur, unit.side):
+            errors.append(f"{cur} is in enemy ZoC (Case 10.23)")
+    return errors
+
+
+def execute_retreat(
+    state: "GameState",
+    unit: Unit,
+    path: list["HexCoord"],
+) -> int:
+    """Execute a Retreat Before Assault along *path*.
+
+    Case 13.2 — Moves the unit hex-by-hex, spending CP per terrain.
+    Retreat is involuntary movement (bypasses Case 8.17 voluntary cap).
+
+    Returns total CP spent.
+    """
+    from cna.rules.land_movement import move_unit
+    if len(path) < 2:
+        return 0
+    result = move_unit(state, unit.id, path, voluntary=False)
+    return result.cp_spent

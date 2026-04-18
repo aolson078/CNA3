@@ -393,3 +393,93 @@ def resolve_close_assault(
         dice_outcome_roll=outcome_roll,
         differential=final,
     )
+
+
+# ---------------------------------------------------------------------------
+# Overrun effects (Case 15.77)
+# ---------------------------------------------------------------------------
+
+
+def apply_overrun_vulnerability(
+    defender_units: list["Unit"],
+    defender_raw_losses: int,
+) -> int:
+    """Apply vulnerability losses to Forward guns during Overrun (Case 15.77).
+
+    Case 15.77 — In the +11 to +17 Overrun columns, Forward guns are
+    subject to vulnerability losses. At minimum 50% of raw points lost
+    are taken as vulnerability points against Forward gun TOE.
+
+    Returns additional TOE lost from vulnerability.
+    """
+    from cna.engine.game_state import UnitType
+    vuln_losses = 0
+    vuln_raw = max(1, defender_raw_losses // 2)
+    for u in defender_units:
+        if u.unit_type in {UnitType.ARTILLERY, UnitType.ANTI_TANK}:
+            if u.stats.vulnerability > 0 and u.current_toe > 0:
+                lost = min(u.current_toe, vuln_raw // max(1, u.stats.vulnerability))
+                if lost > 0:
+                    u.current_toe -= lost
+                    vuln_losses += lost
+    return vuln_losses
+
+
+# ---------------------------------------------------------------------------
+# Recce probe bonus (Case 15.9)
+# ---------------------------------------------------------------------------
+
+
+def recce_probe_loss_reduction(
+    units: list["Unit"],
+    raw_losses: int,
+) -> int:
+    """Reduce probe losses for Recce-type units (Case 15.9).
+
+    Case 15.9 — Recce probes get a 10% loss reduction.
+
+    Returns the adjusted raw losses.
+    """
+    from cna.engine.game_state import UnitType
+    has_recce = any(u.unit_type == UnitType.RECCE for u in units)
+    if has_recce:
+        reduction = max(1, raw_losses // 10)
+        return max(0, raw_losses - reduction)
+    return raw_losses
+
+
+# ---------------------------------------------------------------------------
+# Terrain effects on Close Assault (Case 15.3)
+# ---------------------------------------------------------------------------
+
+
+def terrain_assault_shift(
+    terrain: "TerrainType",
+    fort_level: int = 0,
+    *,
+    defender_in_minefield: bool = False,
+    attacker_has_engineer: bool = False,
+) -> int:
+    """Column shift for terrain on Close Assault (Case 15.3).
+
+    Case 15.3 — Terrain shifts favor the defender (negative = left).
+    Case 25.22 — Fortification shifts.
+    Case 26.26 — Minefield defender bonus.
+    Case 23.24 — Engineer bonus vs fortifications.
+    """
+    from cna.engine.game_state import TerrainType
+    shift = 0
+    if terrain == TerrainType.ROUGH:
+        shift -= 1
+    elif terrain == TerrainType.MOUNTAIN:
+        shift -= 2
+    elif terrain == TerrainType.CITY:
+        shift -= 1
+    elif terrain == TerrainType.SALT_MARSH:
+        shift -= 1
+    shift -= fort_level
+    if defender_in_minefield:
+        shift -= 1
+    if attacker_has_engineer and fort_level > 0:
+        shift += 1  # Case 23.24: engineer bonus vs forts.
+    return shift

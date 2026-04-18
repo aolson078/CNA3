@@ -188,3 +188,55 @@ def apply_armor_damage(
         else:
             break
     return toe_lost
+
+
+# ---------------------------------------------------------------------------
+# Terrain shifts (Case 14.3)
+# ---------------------------------------------------------------------------
+
+
+def terrain_aa_shift(terrain: "TerrainType", fort_level: int = 0,
+                     *, through_slope: bool = False,
+                     through_ridge: bool = False,
+                     through_escarpment: bool = False) -> int:
+    """Column shift for terrain on Anti-Armor fire (Case 14.3).
+
+    Case 14.3 — Negative shifts reduce effective AA points (defender benefit).
+    Shift left one column for Level 1 Fort/Rough/Heavy Vegetation.
+    Shift left two columns for Level 2-3 Fort/Mountain.
+    Shift left one column for slope hexside.
+    Shift left two columns for ridge or escarpment hexside.
+    """
+    from cna.engine.game_state import TerrainType
+    shift = 0
+    if fort_level >= 2:
+        shift -= 2
+    elif fort_level == 1:
+        shift -= 1
+    if terrain == TerrainType.ROUGH:
+        shift -= 1
+    elif terrain == TerrainType.MOUNTAIN:
+        shift -= 2
+    if through_slope:
+        shift -= 1
+    if through_ridge:
+        shift -= 2
+    if through_escarpment:
+        shift -= 2
+    return shift
+
+
+# ---------------------------------------------------------------------------
+# Reassignment to Close Assault (Case 14.26)
+# ---------------------------------------------------------------------------
+
+
+def reassignable_to_assault(aa_actual_points: int, target_has_armor: bool) -> int:
+    """Anti-Armor points reassignable to Close Assault (Case 14.26).
+
+    Case 14.26 — If no armor in target hex, up to half of Anti-Armor
+    points (rounded down) may be reassigned to Close Assault instead.
+    """
+    if target_has_armor:
+        return 0
+    return aa_actual_points // 2

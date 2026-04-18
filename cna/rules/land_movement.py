@@ -28,6 +28,7 @@ Cross-references:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Optional
 
 from cna.engine.errors import RuleViolationError
@@ -332,3 +333,200 @@ def _any_enemy_adjacent(
             if u.side != friendly_side and u.is_combat_unit():
                 return True
     return False
+
+
+# ---------------------------------------------------------------------------
+# Contact / Engaged status (Case 8.6)
+# ---------------------------------------------------------------------------
+
+
+class ContactStatus(str, Enum):
+    """Case 8.62-8.63 — Contact or Engaged status between opposing units."""
+    NONE = "none"
+    CONTACT = "contact"    # Case 8.62: in enemy ZoC at start of movement.
+    ENGAGED = "engaged"    # Case 8.63: result of Close Assault.
+
+
+BREAK_CONTACT_CP = 2   # Case 8.65
+BREAK_ENGAGED_CP = 4   # Case 8.66
+
+
+def break_off_cost(status: ContactStatus) -> int:
+    """CP cost to Break Off from Contact or Engaged status.
+
+    Case 8.65 — Contact: 2 CP.
+    Case 8.66 — Engaged: 4 CP.
+    """
+    if status == ContactStatus.CONTACT:
+        return BREAK_CONTACT_CP
+    if status == ContactStatus.ENGAGED:
+        return BREAK_ENGAGED_CP
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Reaction (Case 8.5)
+# ---------------------------------------------------------------------------
+
+
+def can_react(
+    unit: Unit,
+    enemy_unit: Unit,
+    state: GameState,
+) -> bool:
+    """Whether *unit* can React to *enemy_unit* moving adjacent.
+
+    Case 8.53 — Reaction restrictions:
+      a. Non-motorized units, SGSU, truck convoys without friendly combat
+         units may never React.
+      b. Cannot React if enemy CPA ≥ unit CPA + 6 and enemy announces
+         Close Assault.
+      c. Cannot React if already in an enemy ZoC.
+      d. Cannot React if Engaged.
+
+    Case 8.54 — Size override: battalion cannot pin division; company
+    cannot pin brigade or larger.
+    """
+    from cna.rules.zones_of_control import is_enemy_zoc
+
+    # 8.53a: must be motorized.
+    if not is_motorized(unit):
+        return False
+    if unit.unit_type in {UnitType.SGSU, UnitType.TRUCK}:
+        return False
+
+    # 8.53b: speed-pinning — enemy CPA ≥ unit CPA + 6.
+    if effective_cpa(enemy_unit) >= effective_cpa(unit) + 6:
+        # Case 8.54 size override: small enemy can't pin large unit.
+        if not _size_can_pin(enemy_unit, unit):
+            pass  # Override: unit CAN react despite speed.
+        else:
+            return False
+
+    # 8.53c: already in enemy ZoC.
+    if unit.position is not None and is_enemy_zoc(
+        state, unit.position, unit.side, exclude_unit_id=unit.id
+    ):
+        return False
+
+    # 8.53d: Engaged units cannot react.
+    # (Engaged status tracked externally; check unit extras.)
+    contact = _get_contact_status(unit)
+    if contact == ContactStatus.ENGAGED:
+        return False
+
+    return True
+
+
+def _size_can_pin(pinner: Unit, target: Unit) -> bool:
+    """Case 8.54 — Whether *pinner* can pin *target* by size.
+
+    Battalion cannot pin division; company cannot pin brigade+.
+    """
+    from cna.engine.game_state import OrgSize
+    _ORD = {OrgSize.COMPANY: 0, OrgSize.BATTALION: 1,
+            OrgSize.BRIGADE: 2, OrgSize.DIVISION: 3}
+    p = _ORD.get(pinner.org_size, 1)
+    t = _ORD.get(target.org_size, 1)
+    if p <= 1 and t >= 3:  # Battalion or smaller vs Division.
+        return False
+    if p == 0 and t >= 2:  # Company vs Brigade+.
+        return False
+    return True
+
+
+def _get_contact_status(unit: Unit) -> ContactStatus:
+    """Read contact/engaged status from unit (stored as attribute)."""
+    val = getattr(unit, "_contact_status", None)
+    if isinstance(val, ContactStatus):
+        return val
+    return ContactStatus.NONE
+
+
+def set_contact_status(unit: Unit, status: ContactStatus) -> None:
+    """Set contact/engaged status on a unit (Case 8.62/8.63)."""
+    unit._contact_status = status  # type: ignore[attr-defined]
+
+
+# ---------------------------------------------------------------------------
+# Rail Movement (Case 8.7)
+# ---------------------------------------------------------------------------
+
+RAIL_MAX_SP = 2  # Case 8.75: max 2 stacking points by rail.
+
+
+def can_use_rail(unit: Unit, state: GameState) -> bool:
+    """Whether *unit* can use Rail Movement this Operations Stage.
+
+    Case 8.71 — Commonwealth only (Axis may use per Case 54.4, Layer 3).
+    Case 8.73 — Must be on a rail hex, 0 CP spent, not in enemy ZoC.
+    """
+    from cna.rules.zones_of_control import is_enemy_zoc
+    from cna.rules.stacking import stacking_points
+
+    if unit.side != Side.COMMONWEALTH:
+        return False
+    if unit.position is None:
+        return False
+    if unit.capability_points_spent > 0:
+        return False
+
+    # Must be on a rail hex.
+    mh = state.map.get(unit.position)
+    if mh is None or not mh.rail_exits:
+        return False
+
+    # Not in enemy ZoC.
+    if is_enemy_zoc(state, unit.position, unit.side):
+        return False
+
+    # Case 8.75: max 2 SP.
+    if stacking_points(unit) > RAIL_MAX_SP:
+        return False
+
+    return True
+
+
+def rail_move(
+    state: GameState,
+    unit_id: str,
+    destination: HexCoord,
+) -> bool:
+    """Execute Rail Movement for *unit_id* to *destination*.
+
+    Cases 8.71-8.78 — Moves the unit along the rail line to the
+    destination hex. No CP cost (Case 8.73 — unit must not have
+    spent any CP).
+
+    Case 8.78 — No rail hex west of any Axis combat unit may be used.
+
+    Returns True if the move succeeded, False otherwise.
+    """
+    unit = state.units.get(unit_id)
+    if unit is None:
+        return False
+    if not can_use_rail(unit, state):
+        return False
+
+    # Verify destination is a rail hex.
+    dest_mh = state.map.get(destination)
+    if dest_mh is None or not dest_mh.rail_exits:
+        return False
+
+    # Case 8.78: no rail west of any Axis combat unit.
+    axis_rail_q = None
+    for u in state.units.values():
+        if u.side == Side.AXIS and u.is_combat_unit() and u.position is not None:
+            mh = state.map.get(u.position)
+            if mh is not None and mh.rail_exits:
+                if axis_rail_q is None or u.position.q < axis_rail_q:
+                    axis_rail_q = u.position.q
+    if axis_rail_q is not None and destination.q < axis_rail_q:
+        return False
+
+    unit.position = destination
+    state.log(
+        f"{unit.name} rail move to {destination}",
+        category="movement",
+    )
+    return True

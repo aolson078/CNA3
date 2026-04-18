@@ -191,3 +191,78 @@ def resolve_barrage(
         dice_roll=roll,
         barrage_points=barrage_actual_points,
     )
+
+
+# ---------------------------------------------------------------------------
+# Barrage targeting (Case 12.2)
+# ---------------------------------------------------------------------------
+
+
+def can_barrage_target(
+    firing_hex: "HexCoord",
+    target_hex: "HexCoord",
+    position: GunPosition,
+) -> bool:
+    """Whether an artillery unit at *firing_hex* can barrage *target_hex*.
+
+    Case 12.21 — Any adjacent hex containing enemy units may be barraged.
+    Case 12.22 — Forward guns can coordinate fire with other Forward guns
+    in same or different hexes against the same target.
+    Case 12.23 — Back guns fire independently.
+    """
+    from cna.engine.hex_map import is_adjacent
+    return is_adjacent(firing_hex, target_hex)
+
+
+def max_targets_per_unit(position: GunPosition) -> int:
+    """Maximum number of different hexes one artillery unit can barrage.
+
+    Case 12.22 — Forward: may split fire among multiple targets.
+    Case 12.23 — Back: may only fire at one target.
+    """
+    if position == GunPosition.BACK:
+        return 1
+    return 3  # Forward guns can split across up to 3 targets (est).
+
+
+# ---------------------------------------------------------------------------
+# Terrain effects on barrage (Case 12.3)
+# ---------------------------------------------------------------------------
+
+
+def terrain_barrage_shift(terrain: "TerrainType", fort_level: int = 0) -> int:
+    """Column shift for terrain/fortification on barrage (Case 12.3).
+
+    Negative shifts reduce effective barrage points (defender benefit).
+    Case 12.31 — Fortifications provide column shifts.
+    Case 12.32 — Certain terrain reduces barrage effectiveness.
+    """
+    from cna.engine.game_state import TerrainType
+    shift = 0
+    # Fortification shifts (Case 25.22).
+    shift -= fort_level
+    # Terrain shifts.
+    if terrain == TerrainType.ROUGH:
+        shift -= 1
+    elif terrain == TerrainType.MOUNTAIN:
+        shift -= 2
+    elif terrain == TerrainType.CITY:
+        shift -= 1
+    return shift
+
+
+# ---------------------------------------------------------------------------
+# Barrage against facilities (Case 12.5)
+# ---------------------------------------------------------------------------
+
+
+def barrage_facility_effectiveness(barrage_points: int, *, is_port: bool = False,
+                                   is_airfield: bool = False) -> int:
+    """Effective barrage points against a facility (Case 12.5).
+
+    Case 12.51 — Barrage against airfields and ports is less effective
+    than against units. Halve the barrage points (rounded down).
+    """
+    if is_port or is_airfield:
+        return barrage_points // 2
+    return barrage_points
