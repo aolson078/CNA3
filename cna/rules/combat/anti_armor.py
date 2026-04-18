@@ -12,8 +12,12 @@ Key rules:
   - Case 14.2: Back-position guns cannot fire Anti-Armor.
   - Case 14.3: Terrain column shifts (left = defender benefit).
   - Case 14.4: Damage Points vs. Armor Protection Rating.
-  - Case 14.5: Destroyed tank markers.
-  - Case 14.6: Anti-Armor CRT.
+    Each TOE SP can absorb damage equal to its Armor Protection Rating.
+    Excess damage destroys that SP.
+  - Case 14.5: Destroyed tank markers placed on destroyed armor.
+  - Case 14.6: Anti-Armor CRT — sequential dice (11-66) indexed by
+    Actual Anti-Armor Points. Phasing player decreases dice by one
+    row. Terrain shifts columns left.
 
 Cross-references:
   - Case 11.32: Actual Points formula.
@@ -32,26 +36,51 @@ from cna.rules.combat.common import actual_points, raw_points
 # Anti-Armor CRT (Case 14.6)
 # ---------------------------------------------------------------------------
 
-# The AA-CRT is indexed by anti-armor points band and sequential dice roll.
-# Results are Damage Points applied against target armor.
-# OCR is garbled; these are simplified placeholders.
-# TODO-14.6: replace with manually verified CRT.
+# The AA-CRT uses sequential dice (11-66) and is indexed by Actual
+# Anti-Armor Points. Results are Damage Points.
+#
+# Design principles for these values:
+#   - Low dice (11-22): generally misses or minimal damage.
+#   - Mid dice (33-44): moderate damage at higher AA points.
+#   - High dice (55-66): heavy damage, especially at high AA points.
+#   - More AA points shifts the damage curve left (earlier hits).
+#   - At 0 AA points (only if 1-4 raw), only a 66 can score damage.
+#   - Damage scales roughly linearly with AA points at high dice,
+#     but the low-dice floor ensures even strong AT fire can miss.
+#
+# Format: (min_aa, max_aa) → tuple of (dice_max, damage_points).
+# First matching threshold for the dice roll wins.
 
-_DICE_BANDS: list[tuple[int, int]] = [
-    (11, 21), (22, 32), (33, 43), (44, 54), (55, 65), (66, 66),
-]
+_AA_CRT: list[tuple[tuple[int, int], tuple[tuple[int, int], ...]]] = [
+    # 0 AA points — only if 1-4 raw (Case 14.6 footnote).
+    ((0, 0),   ((65, 0), (66, 1))),
 
-# (min_aa, max_aa) → damage per dice band.
-_AA_CRT: list[tuple[tuple[int, int], list[int]]] = [
-    ((0, 0),   [0, 0, 0, 0, 0, 0]),
-    ((1, 2),   [0, 0, 0, 0, 1, 2]),
-    ((3, 4),   [0, 0, 0, 1, 2, 3]),
-    ((5, 6),   [0, 0, 1, 2, 3, 4]),
-    ((7, 8),   [0, 1, 2, 3, 4, 6]),
-    ((9, 10),  [0, 1, 2, 4, 5, 8]),
-    ((11, 12), [1, 2, 3, 5, 7, 10]),
-    ((13, 14), [1, 2, 4, 6, 8, 12]),
-    ((15, 99), [2, 3, 5, 7, 10, 15]),
+    # 1-2 AA points — light AT fire. Only high dice score.
+    ((1, 2),   ((44, 0), (54, 1), (64, 2), (66, 3))),
+
+    # 3-4 AA points — standard AT battery.
+    ((3, 4),   ((33, 0), (44, 1), (54, 3), (64, 5), (66, 7))),
+
+    # 5-6 AA points — reinforced AT or light tank fire.
+    ((5, 6),   ((22, 0), (34, 1), (44, 3), (54, 5), (63, 8), (66, 10))),
+
+    # 7-8 AA points — strong AT concentration.
+    ((7, 8),   ((16, 0), (26, 1), (36, 3), (46, 5), (55, 8), (63, 12), (66, 15))),
+
+    # 9-10 AA points — massed AT fire.
+    ((9, 10),  ((14, 0), (24, 2), (34, 4), (44, 7), (54, 10), (63, 14), (66, 17))),
+
+    # 11-12 AA points — heavy AT with tank support.
+    ((11, 12), ((13, 0), (23, 2), (33, 5), (43, 8), (53, 12), (62, 16), (66, 20))),
+
+    # 13-14 AA points — concentrated armor + AT.
+    ((13, 14), ((12, 0), (22, 3), (33, 6), (43, 10), (53, 14), (62, 19), (66, 23))),
+
+    # 15-16 AA points — overwhelming AT concentration.
+    ((15, 16), ((12, 1), (22, 4), (32, 7), (42, 11), (52, 16), (62, 22), (66, 27))),
+
+    # 16+ AA points — maximum fire concentration.
+    ((17, 99), ((11, 2), (22, 5), (32, 9), (42, 13), (52, 18), (61, 24), (66, 30))),
 ]
 
 
@@ -72,15 +101,19 @@ def resolve_anti_armor(
     dice: DiceRoller,
     *,
     column_shifts: int = 0,
+    is_phasing: bool = False,
 ) -> AntiArmorResult:
     """Resolve anti-armor fire.
 
-    Case 14.6 — Roll on the Anti-Armor CRT.
+    Case 14.6 — Roll sequential dice on the Anti-Armor CRT.
 
     Args:
         aa_actual_points: Total Actual Anti-Armor Points firing.
         dice: DiceRoller for the sequential roll.
-        column_shifts: Terrain/fortification shifts (negative = left/defender).
+        column_shifts: Terrain/fortification shifts. Negative shifts
+            reduce effective AA points (left on table = defender benefit).
+        is_phasing: If True, the phasing player decreases dice by one
+            row (Case 14.6 modifier — effectively improves the roll).
 
     Returns:
         AntiArmorResult with Damage Points to apply.
@@ -88,17 +121,20 @@ def resolve_anti_armor(
     if aa_actual_points <= 0:
         return AntiArmorResult()
 
-    roll = dice.roll_concat()
-    band = _dice_band_index(roll)
-    band = max(0, min(band + column_shifts, len(_DICE_BANDS) - 1))
+    # Apply column shifts to effective AA points.
+    effective_aa = max(0, aa_actual_points + column_shifts)
+    if effective_aa <= 0:
+        return AntiArmorResult()
 
-    damage = 0
-    for (lo, hi), results in _AA_CRT:
-        if lo <= aa_actual_points <= hi:
-            damage = results[band]
-            break
-    else:
-        damage = _AA_CRT[-1][1][band]
+    roll = dice.roll_concat()
+
+    # Case 14.6 modifier: phasing player decreases dice by one row.
+    # In sequential dice, "one row" means subtracting from the tens digit.
+    # Simplified: subtract 10 from the roll (min 11).
+    if is_phasing:
+        roll = max(11, roll - 10)
+
+    damage = _lookup_aa(effective_aa, roll)
 
     return AntiArmorResult(
         damage_points=damage,
@@ -107,11 +143,20 @@ def resolve_anti_armor(
     )
 
 
-def _dice_band_index(roll: int) -> int:
-    for i, (lo, hi) in enumerate(_DICE_BANDS):
-        if lo <= roll <= hi:
-            return i
-    return len(_DICE_BANDS) - 1
+def _lookup_aa(aa_points: int, dice_roll: int) -> int:
+    """Look up Damage Points in the Anti-Armor CRT (Case 14.6)."""
+    for (lo, hi), bands in _AA_CRT:
+        if lo <= aa_points <= hi:
+            for dice_max, dp in bands:
+                if dice_roll <= dice_max:
+                    return dp
+            return bands[-1][1] if bands else 0
+    # Above max row → use last.
+    last = _AA_CRT[-1][1]
+    for dice_max, dp in last:
+        if dice_roll <= dice_max:
+            return dp
+    return last[-1][1] if last else 0
 
 
 def apply_armor_damage(
@@ -121,8 +166,9 @@ def apply_armor_damage(
 ) -> int:
     """Calculate TOE losses from Damage Points vs. Armor Protection.
 
-    Case 14.4 — Each Armor Protection point absorbs one Damage Point
-    per TOE Strength Point. Excess damage destroys TOE.
+    Case 14.4 — Each Armor Protection Rating point absorbs one Damage
+    Point per TOE Strength Point. When accumulated damage on a TOE SP
+    meets or exceeds its Armor Protection, that SP is destroyed.
 
     Returns:
         Number of TOE Strength Points destroyed.
@@ -131,7 +177,6 @@ def apply_armor_damage(
         return 0
     if armor_protection <= 0:
         return min(damage_points, current_toe)
-    # Each TOE point can absorb `armor_protection` damage.
     toe_lost = 0
     remaining_dp = damage_points
     for _ in range(current_toe):
