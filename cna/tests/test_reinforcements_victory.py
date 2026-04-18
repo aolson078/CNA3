@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from cna.data.maps.hex_catalog import get_by_name
 from cna.data.scenarios.operation_compass import build_grazianis_offensive
 from cna.data.scenarios.victory import (
     VictoryLevel,
@@ -153,7 +154,14 @@ def test_italian_campaign_no_axis_is_cw_strategic():
 
 def test_italian_campaign_vp_count():
     gs = build_grazianis_offensive()
-    # Place CW at Tobruk (5 VP) and Benghazi (5 VP).
+    # Remove Axis units from Tobruk and Benghazi, then place CW there.
+    to_remove = [uid for uid, u in gs.units.items()
+                 if u.side == Side.AXIS and u.position is not None
+                 and any(u.position == get_by_name(n).coord
+                         for n in ("Tobruk", "Benghazi")
+                         if get_by_name(n) is not None)]
+    for uid in to_remove:
+        del gs.units[uid]
     _place_unit_at(gs, "cw.tobruk", Side.COMMONWEALTH, "Tobruk")
     _place_unit_at(gs, "cw.benghazi", Side.COMMONWEALTH, "Benghazi")
     result = check_italian_campaign_victory(gs)

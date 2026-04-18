@@ -199,4 +199,153 @@ def build_italian_oob() -> list[Unit]:
            ut=UnitType.ANTI_TANK, uc=UnitClass.GUN, org=OrgSize.COMPANY,
            cpa=CPA_FOOT_INFANTRY, toe=2, morale=0,
            anti_armor=4, vulnerability=2, off_assault=1, def_assault=2),
+
+        # --- Additional garrisons (Case 60.31) ---
+
+        _u("ax.gar.tobruk", "Tobruk Garrison", "C4807",
+           org=OrgSize.BATTALION, cpa=CPA_GARRISON, toe=3, morale=-1,
+           off_assault=3, def_assault=4),
+
+        _u("ax.gar.bardia", "Bardia Garrison", "C4321",
+           org=OrgSize.BATTALION, cpa=CPA_GARRISON, toe=3, morale=-1,
+           off_assault=3, def_assault=4),
+
+        _u("ax.gar.benina", "Benina Garrison", "A4829",
+           org=OrgSize.BATTALION, cpa=CPA_GARRISON, toe=2, morale=-1,
+           off_assault=3, def_assault=4),
+
+        _u("ax.gar.soluch", "Soluch Garrison", "A4130",
+           org=OrgSize.BATTALION, cpa=CPA_GARRISON, toe=2, morale=-1,
+           off_assault=3, def_assault=4),
+
+        # --- X Company (Artillery) at Soluch ---
+
+        _u("ax.x_cp_ar", "X Cp (Artillery)", "A4130",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN, org=OrgSize.COMPANY,
+           cpa=CPA_GARRISON, toe=1, morale=0,
+           barrage=9, vulnerability=3, off_assault=1, def_assault=2),
+
+        # --- Saharan Detachment (within 3 hexes of C0716) ---
+
+        _u("ax.saharan", "Saharan Detachment", "C0716",
+           org=OrgSize.BATTALION, toe=3, morale=0,
+           off_assault=6, def_assault=5),
+
+        # --- Anywhere in Libya: Corps Artillery battalions ---
+        # 1/1AR through 4/1AR (1st Artillery Regiment, 4 battalions)
+
+        _u("ax.1_1ar", "1/1st Artillery Regt", "C4807",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN, org=OrgSize.BATTALION,
+           cpa=CPA_FOOT_INFANTRY, toe=3, morale=0,
+           barrage=9, vulnerability=3, off_assault=2, def_assault=3),
+
+        _u("ax.2_1ar", "2/1st Artillery Regt", "C4507",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN, org=OrgSize.BATTALION,
+           cpa=CPA_FOOT_INFANTRY, toe=3, morale=0,
+           barrage=9, vulnerability=3, off_assault=2, def_assault=3),
+
+        _u("ax.3_1ar", "3/1st Artillery Regt", "C4321",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN, org=OrgSize.BATTALION,
+           cpa=CPA_FOOT_INFANTRY, toe=3, morale=0,
+           barrage=9, vulnerability=3, off_assault=2, def_assault=3),
+
+        _u("ax.4_1ar", "4/1st Artillery Regt", "C4218",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN, org=OrgSize.BATTALION,
+           cpa=CPA_FOOT_INFANTRY, toe=3, morale=0,
+           barrage=9, vulnerability=3, off_assault=2, def_assault=3),
+
+        # XXI and XXVI Corps Artillery companies.
+        _u("ax.xxi_cp", "XXI Corps Arty Cp", "C3918",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN, org=OrgSize.COMPANY,
+           cpa=CPA_FOOT_INFANTRY, toe=2, morale=0,
+           barrage=9, vulnerability=3, off_assault=1, def_assault=2),
+
+        _u("ax.xxvi_cp", "XXVI Corps Arty Cp", "C4120",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN, org=OrgSize.COMPANY,
+           cpa=CPA_FOOT_INFANTRY, toe=2, morale=0,
+           barrage=9, vulnerability=3, off_assault=1, def_assault=2),
+
+        # --- Anywhere on Map A or B: Libyan infantry + GaF artillery ---
+
+        _u("ax.xviii_lib", "XVIII Libyan Bn", "B4827",
+           org=OrgSize.BATTALION, toe=4, morale=-1,
+           off_assault=5, def_assault=5),
+
+        _u("ax.xxxii_lib", "XXXII Libyan Bn", "B5504",
+           org=OrgSize.BATTALION, toe=4, morale=-1,
+           off_assault=5, def_assault=5),
+
+        # GaF (Guardia alla Frontiera) coastal artillery batteries.
+        _u("ax.6gaf", "6 GaF Battery", "B4827",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN, org=OrgSize.COMPANY,
+           cpa=CPA_GARRISON, toe=2, morale=-1,
+           barrage=6, vulnerability=2, off_assault=1, def_assault=2),
+
+        _u("ax.16gaf", "16 GaF Battery", "B5925",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN, org=OrgSize.COMPANY,
+           cpa=CPA_GARRISON, toe=2, morale=-1,
+           barrage=6, vulnerability=2, off_assault=1, def_assault=2),
+
+        _u("ax.22gaf", "22 GaF Battery", "A4829",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN, org=OrgSize.COMPANY,
+           cpa=CPA_GARRISON, toe=2, morale=-1,
+           barrage=6, vulnerability=2, off_assault=1, def_assault=2),
+
+        _u("ax.42gaf", "42 GaF Battery", "A4130",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN, org=OrgSize.COMPANY,
+           cpa=CPA_GARRISON, toe=2, morale=-1,
+           barrage=6, vulnerability=2, off_assault=1, def_assault=2),
+
+        _u("ax.350gaf", "350 GaF Battery", "B5504",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN, org=OrgSize.COMPANY,
+           cpa=CPA_GARRISON, toe=2, morale=-1,
+           barrage=6, vulnerability=2, off_assault=1, def_assault=2),
+
+        # Other artillery scattered on Maps A/B.
+        _u("ax.147ar", "147th Artillery", "B4827",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN, org=OrgSize.COMPANY,
+           cpa=CPA_GARRISON, toe=2, morale=0,
+           barrage=9, vulnerability=3, off_assault=1, def_assault=2),
+
+        _u("ax.131ar", "131st Artillery", "B5925",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN, org=OrgSize.COMPANY,
+           cpa=CPA_GARRISON, toe=2, morale=0,
+           barrage=9, vulnerability=3, off_assault=1, def_assault=2),
+
+        # --- Tripoli: 2nd and 3rd CCNN Divisions ---
+
+        # These are off the operational map but on the Tripoli box.
+        # Placed at Tripolitania Entry hex (A2802) as a proxy.
+        _u("ax.2ccnn", "2nd CCNN Division", "A2802",
+           toe=10, morale=-1, off_assault=5, def_assault=5),
+
+        _u("ax.3ccnn", "3rd CCNN Division", "A2802",
+           toe=10, morale=-1, off_assault=5, def_assault=5),
+
+        _u("ax.xxii_cp", "XXII Corps Arty Cp", "A2802",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN, org=OrgSize.COMPANY,
+           cpa=CPA_GARRISON, toe=2, morale=0,
+           barrage=9, vulnerability=3, off_assault=1, def_assault=2),
+
+        _u("ax.xxiii_cp", "XXIII Corps Arty Cp", "A2802",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN, org=OrgSize.COMPANY,
+           cpa=CPA_GARRISON, toe=2, morale=0,
+           barrage=9, vulnerability=3, off_assault=1, def_assault=2),
+
+        # Tripolitania: 4/10 Army (infantry).
+        _u("ax.4_10army", "4/10th Army", "A2802",
+           org=OrgSize.BRIGADE, toe=6, morale=-1,
+           off_assault=5, def_assault=5),
+
+        # --- Anti-Aircraft ---
+
+        _u("ax.aa.tobruk", "Tobruk AA Battery", "C4807",
+           ut=UnitType.ANTI_AIRCRAFT, uc=UnitClass.GUN, org=OrgSize.COMPANY,
+           cpa=CPA_GARRISON, toe=2, morale=0,
+           aa=2, off_assault=1, def_assault=1),
+
+        _u("ax.aa.bardia", "Bardia AA Battery", "C4321",
+           ut=UnitType.ANTI_AIRCRAFT, uc=UnitClass.GUN, org=OrgSize.COMPANY,
+           cpa=CPA_GARRISON, toe=2, morale=0,
+           aa=2, off_assault=1, def_assault=1),
     ]

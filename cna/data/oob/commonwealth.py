@@ -210,4 +210,80 @@ def build_commonwealth_oob() -> list[Unit]:
            cpa=CPA_ARTILLERY_TOWED, toe=4, morale=2,
            anti_armor=6, vulnerability=2,
            off_assault=1, def_assault=2),
+
+        # 149th Anti-Tank Regt.
+        _u("cw.149at", "149th Anti-Tank Regt", "D3714",
+           ut=UnitType.ANTI_TANK, uc=UnitClass.GUN,
+           cpa=CPA_ARTILLERY_TOWED, toe=4, morale=2,
+           anti_armor=6, vulnerability=2,
+           off_assault=1, def_assault=2),
+
+        # --- Anti-Aircraft (anywhere on Map D or E) ---
+
+        _u("cw.9haa", "9th Heavy AA Regt", "E3613",
+           ut=UnitType.ANTI_AIRCRAFT, uc=UnitClass.GUN, org=OrgSize.BATTALION,
+           cpa=CPA_GARRISON, toe=3, morale=2,
+           aa=5, anti_armor=4, off_assault=1, def_assault=2),
+
+        _u("cw.15laa", "15th Light AA Regt", "D3714",
+           ut=UnitType.ANTI_AIRCRAFT, uc=UnitClass.GUN, org=OrgSize.BATTALION,
+           cpa=CPA_GARRISON, toe=3, morale=2,
+           aa=3, off_assault=1, def_assault=1),
+
+        _u("cw.57laa", "57th Light AA Regt", "E3613",
+           ut=UnitType.ANTI_AIRCRAFT, uc=UnitClass.GUN, org=OrgSize.BATTALION,
+           cpa=CPA_GARRISON, toe=3, morale=2,
+           aa=3, off_assault=1, def_assault=1),
+
+        # --- NZ sub-units at Alexandria ---
+
+        _u("cw.27nz_mg", "27th NZ MG Bn", "E3613",
+           org=OrgSize.BATTALION, cpa=CPA_FOOT_INFANTRY,
+           toe=4, morale=2, off_assault=5, def_assault=9),
+
+        _u("cw.2nz_cav", "2nd NZ Cavalry", "E3613",
+           ut=UnitType.RECCE, uc=UnitClass.ARMOR,
+           org=OrgSize.BATTALION, cpa=CPA_RECCE,
+           toe=3, morale=2, anti_armor=2, armor_protection=1,
+           off_assault=4, def_assault=3, fuel_rate=1),
+
+        _u("cw.4nz_arty", "4th NZ Field Arty Regt", "E3613",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN,
+           cpa=CPA_ARTILLERY_TOWED, toe=4, morale=2,
+           barrage=12, vulnerability=3, anti_armor=3,
+           off_assault=2, def_assault=3),
+
+        # --- Matruh Garrison sub-units (Case 60.41: attached) ---
+
+        _u("cw.1essex", "1st Essex", "D3714",
+           org=OrgSize.BATTALION, cpa=CPA_FOOT_INFANTRY,
+           toe=6, morale=1, off_assault=7, def_assault=7),
+
+        _u("cw.1durham", "1st Durham Light Inf", "D3714",
+           org=OrgSize.BATTALION, cpa=CPA_FOOT_INFANTRY,
+           toe=6, morale=1, off_assault=7, def_assault=7),
+
+        _u("cw.1sstaffs", "1st South Staffordshires", "D3714",
+           org=OrgSize.BATTALION, cpa=CPA_FOOT_INFANTRY,
+           toe=6, morale=1, off_assault=7, def_assault=7),
+
+        # --- Cairo units ---
+
+        _u("cw.8field", "8th Field Arty Regt", "E1430",
+           ut=UnitType.ARTILLERY, uc=UnitClass.GUN,
+           cpa=CPA_ARTILLERY_TOWED, toe=4, morale=2,
+           barrage=12, vulnerability=3, anti_armor=3,
+           off_assault=2, def_assault=3),
+
+        _u("cw.1welch", "1st Welch", "E1430",
+           org=OrgSize.BATTALION, cpa=CPA_FOOT_INFANTRY,
+           toe=6, morale=1, off_assault=7, def_assault=7),
+
+        _u("cw.1cheshire", "1st Cheshire MG Bn", "E1430",
+           org=OrgSize.BATTALION, cpa=CPA_FOOT_INFANTRY,
+           toe=4, morale=1, off_assault=5, def_assault=9),
+
+        _u("cw.2kings", "2nd King's Own Royal Regt", "E1430",
+           org=OrgSize.BATTALION, cpa=CPA_FOOT_INFANTRY,
+           toe=6, morale=1, off_assault=7, def_assault=7),
     ]
