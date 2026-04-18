@@ -72,8 +72,8 @@ class TestGrazianisOffensive:
         cw = [u for u in self.gs.units.values() if u.side == Side.COMMONWEALTH]
         assert len(cw) >= 5
         names = {u.name for u in cw}
-        assert "7th Armoured Division" in names
-        assert "4th Indian Division" in names
+        assert any("7th Armoured" in n for n in names)
+        assert any("4th Indian" in n or "4th Ind" in n for n in names)
 
     def test_all_units_on_map(self):
         for u in self.gs.units.values():

@@ -29,22 +29,15 @@ Items flagged TODO-60.X below reference the rulebook case they implement.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
-from cna.data.maps.coords import hex_id_to_coord
 from cna.data.maps.map_builder import build_operational_map
+from cna.data.oob.commonwealth import build_commonwealth_oob
+from cna.data.oob.italian import build_italian_oob
 from cna.engine.game_state import (
     GameState,
-    HexCoord,
     OperationsStage,
-    OrgSize,
     Phase,
     Player,
     Side,
-    Unit,
-    UnitClass,
-    UnitStats,
-    UnitType,
     WeatherState,
 )
 from cna.rules.initiative import InitiativeRatings, set_initiative_ratings
@@ -57,138 +50,6 @@ from cna.rules.initiative import InitiativeRatings, set_initiative_ratings
 
 SCENARIO_ID_GRAZIANI = "operation_compass.grazianis_offensive"
 SCENARIO_ID_ITALIAN_CAMPAIGN = "operation_compass.italian_campaign"
-
-
-# ---------------------------------------------------------------------------
-# Abbreviated OOB (Case 60.31 Axis, Case 60.41 Commonwealth)
-# ---------------------------------------------------------------------------
-
-
-@dataclass(frozen=True)
-class _UnitSpec:
-    """Compact unit spec used by the abbreviated OOB table.
-
-    Case 60.31 / 60.41 — each entry represents a headline formation with
-    placeholder ratings. Rating values are conservative Layer-1 defaults;
-    full OA-chart fidelity is a separate task (see module docstring).
-    """
-
-    uid: str
-    name: str
-    unit_type: UnitType
-    unit_class: UnitClass
-    org_size: OrgSize
-    max_toe: int
-    cpa: int
-    morale: int
-    location: str  # Game hex ID (e.g. "C4218") or "off_map"
-
-
-# Italian Initial Deployment — Case 60.31. Abbreviated to the headline
-# divisions and a single representative armored formation. Item details
-# like attached corps artillery and truck pools are deferred.
-_AXIS_OOB: tuple[_UnitSpec, ...] = (
-    # Case 60.31 — Italian Initial Deployment (abbreviated).
-    _UnitSpec("ax.1ccnn", "1st CCNN Division", UnitType.INFANTRY,
-             UnitClass.INFANTRY, OrgSize.DIVISION, max_toe=12, cpa=8, morale=0,
-             location="C4218"),
-    _UnitSpec("ax.63cirene", "63rd Cirene Division", UnitType.INFANTRY,
-             UnitClass.INFANTRY, OrgSize.DIVISION, max_toe=12, cpa=8, morale=0,
-             location="C4120"),
-    _UnitSpec("ax.1libyan", "1st Libyan Division", UnitType.INFANTRY,
-             UnitClass.INFANTRY, OrgSize.DIVISION, max_toe=10, cpa=8, morale=-1,
-             location="C4020"),
-    _UnitSpec("ax.2libyan", "2nd Libyan Division", UnitType.INFANTRY,
-             UnitClass.INFANTRY, OrgSize.DIVISION, max_toe=10, cpa=8, morale=-1,
-             location="C3920"),
-    _UnitSpec("ax.62marmar", "62nd Marmarica Division", UnitType.INFANTRY,
-             UnitClass.INFANTRY, OrgSize.DIVISION, max_toe=12, cpa=8, morale=0,
-             location="C3918"),
-    _UnitSpec("ax.maletti", "Maletti Division", UnitType.INFANTRY,
-             UnitClass.INFANTRY, OrgSize.DIVISION, max_toe=10, cpa=8, morale=0,
-             location="C3617"),
-    _UnitSpec("ax.64catanz", "64th Catanzaro Division", UnitType.INFANTRY,
-             UnitClass.INFANTRY, OrgSize.DIVISION, max_toe=12, cpa=8, morale=0,
-             location="C4707"),
-    _UnitSpec("ax.4ccnn", "4th CCNN Division", UnitType.INFANTRY,
-             UnitClass.INFANTRY, OrgSize.DIVISION, max_toe=12, cpa=8, morale=0,
-             location="C4507"),
-    _UnitSpec("ax.trivoli", "Trivoli Regiment", UnitType.TANK,
-             UnitClass.ARMOR, OrgSize.BRIGADE, max_toe=6, cpa=10, morale=1,
-             location="C4321"),
-    _UnitSpec("ax.libtkcmd", "Libyan Tank Command", UnitType.HEADQUARTERS,
-             UnitClass.ARMOR, OrgSize.DIVISION, max_toe=6, cpa=10, morale=1,
-             location="C4807"),
-    _UnitSpec("ax.aresca", "Aresca Regiment", UnitType.TANK,
-             UnitClass.ARMOR, OrgSize.BRIGADE, max_toe=6, cpa=10, morale=0,
-             location="C3919"),
-    _UnitSpec("ax.bengaz", "Benghazi Garrison", UnitType.INFANTRY,
-             UnitClass.INFANTRY, OrgSize.BATTALION, max_toe=4, cpa=0, morale=-1,
-             location="B4827"),
-    _UnitSpec("ax.derna", "Derna Garrison", UnitType.INFANTRY,
-             UnitClass.INFANTRY, OrgSize.BATTALION, max_toe=4, cpa=0, morale=-1,
-             location="B5925"),
-    _UnitSpec("ax.giarabub", "Giarabub Garrison", UnitType.INFANTRY,
-             UnitClass.INFANTRY, OrgSize.BATTALION, max_toe=4, cpa=0, morale=-1,
-             location="C1014"),
-    # TODO-60.31: 30+ additional formations (Saharan Det, XVIII/XXXII Lib,
-    # garrison units, Tripolitania forces, coastal shipping, airfields).
-)
-
-
-# Commonwealth Initial Deployment — Case 60.41.
-_COMMONWEALTH_OOB: tuple[_UnitSpec, ...] = (
-    # Case 60.41 — Commonwealth Initial Deployment (abbreviated).
-    _UnitSpec("cw.7armd", "7th Armoured Division",
-             UnitType.HEADQUARTERS, UnitClass.ARMOR, OrgSize.DIVISION,
-             max_toe=14, cpa=12, morale=2, location="D3612"),
-    _UnitSpec("cw.4ind", "4th Indian Division",
-             UnitType.HEADQUARTERS, UnitClass.INFANTRY, OrgSize.DIVISION,
-             max_toe=14, cpa=10, morale=2, location="D3615"),
-    _UnitSpec("cw.matruh", "Matruh Garrison",
-             UnitType.INFANTRY, UnitClass.INFANTRY, OrgSize.BRIGADE,
-             max_toe=8, cpa=8, morale=1, location="D3714"),
-    _UnitSpec("cw.2nz", "2nd New Zealand Division",
-             UnitType.HEADQUARTERS, UnitClass.INFANTRY, OrgSize.DIVISION,
-             max_toe=12, cpa=10, morale=2, location="E3613"),
-    _UnitSpec("cw.16bde", "16th Infantry Brigade",
-             UnitType.INFANTRY, UnitClass.INFANTRY, OrgSize.BRIGADE,
-             max_toe=8, cpa=10, morale=2, location="E1829"),
-    _UnitSpec("cw.2scots", "2nd Scots Guards",
-             UnitType.INFANTRY, UnitClass.INFANTRY, OrgSize.BATTALION,
-             max_toe=6, cpa=10, morale=2, location="C4131"),
-    _UnitSpec("cw.3cold", "3rd Coldstream Guards",
-             UnitType.INFANTRY, UnitClass.INFANTRY, OrgSize.BATTALION,
-             max_toe=6, cpa=10, morale=2, location="C3922"),
-    _UnitSpec("cw.11hus", "11th Hussars",
-             UnitType.RECCE, UnitClass.ARMOR, OrgSize.BATTALION,
-             max_toe=4, cpa=14, morale=3, location="C3020"),
-    _UnitSpec("cw.6aus", "6th Australian Division (Training)",
-             UnitType.HEADQUARTERS, UnitClass.INFANTRY, OrgSize.DIVISION,
-             max_toe=12, cpa=10, morale=1, location="E1430"),
-    # TODO-60.41: remaining corps artillery, regional artillery regiments,
-    # Malta forces, Free French detachments, fleet counters (Case 60.45).
-)
-
-
-def _unit_from_spec(spec: _UnitSpec, side: Side) -> Unit:
-    pos = hex_id_to_coord(spec.location) if spec.location != "off_map" else None
-    return Unit(
-        id=spec.uid,
-        side=side,
-        name=spec.name,
-        unit_type=spec.unit_type,
-        unit_class=spec.unit_class,
-        org_size=spec.org_size,
-        stats=UnitStats(
-            capability_point_allowance=spec.cpa,
-            max_toe_strength=spec.max_toe,
-            basic_morale=spec.morale,
-        ),
-        position=pos,
-        current_toe=spec.max_toe,
-        current_morale=spec.morale,
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -218,12 +79,10 @@ def _build_common(scenario_id: str, name: str, length_turns: int) -> GameState:
     # Build the full operational map from the hex catalog.
     state.map = build_operational_map()
 
-    # Populate OOB.
-    for spec in _AXIS_OOB:
-        u = _unit_from_spec(spec, Side.AXIS)
+    # Populate OOB from real combat-rated unit data.
+    for u in build_italian_oob():
         state.units[u.id] = u
-    for spec in _COMMONWEALTH_OOB:
-        u = _unit_from_spec(spec, Side.COMMONWEALTH)
+    for u in build_commonwealth_oob():
         state.units[u.id] = u
 
     # Case 60.6 — Italian Player has Initiative for the entire first Game-Turn.

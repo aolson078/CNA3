@@ -116,11 +116,10 @@ def test_graziani_7_armd_and_4_ind_deployed_near_matruh():
     # at their historical positions, not consolidated at Matruh.
     state = build_grazianis_offensive()
     unit_names = {u.name for u in state.units.values()}
-    assert "7th Armoured Division" in unit_names
-    assert "4th Indian Division" in unit_names
-    # Both should be on the map.
-    armd = next(u for u in state.units.values() if u.name == "7th Armoured Division")
-    ind = next(u for u in state.units.values() if u.name == "4th Indian Division")
+    assert any("7th Armoured" in n for n in unit_names)
+    assert any("4th Indian" in n or "4th Ind" in n for n in unit_names)
+    armd = next(u for u in state.units.values() if "7th Armoured" in u.name)
+    ind = next(u for u in state.units.values() if "4th Ind" in u.name)
     assert armd.position is not None
     assert ind.position is not None
 
