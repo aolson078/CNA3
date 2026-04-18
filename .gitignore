@@ -4,3 +4,5 @@ _raw_extracted.txt
 __pycache__/
 *.pyc
 .ruff_cache/
+.claude/worktrees/
+saves/
