@@ -58,6 +58,19 @@ class UnitClass(str, Enum):
     TRUCK = "truck"
 
 
+class Nationality(str, Enum):
+    """Nationality of a unit within its side.
+
+    Case 3.1 — The Axis side contains both German and Italian units;
+    the Commonwealth side is treated as a single nationality for
+    organization purposes despite its multinational composition.
+    """
+
+    GERMAN = "german"
+    ITALIAN = "italian"
+    COMMONWEALTH = "commonwealth"
+
+
 class UnitType(str, Enum):
     """Unit type categories.
 
@@ -219,9 +232,11 @@ class Unit:
         unit_type: Primary type (Case 3.21).
         unit_class: Target class for barrage (Case 3.22).
         org_size: Organization-Size (Case 3.1).
+        nationality: German, Italian, or Commonwealth (Case 3.1).
         stats: Combat/capability ratings (Case 3.5).
         position: Current hex, or None if off-map (reinforcement pool).
         parent_id: ID of parent Unit if assigned (Case 3.1 "Assigned").
+        assigned_unit_ids: IDs of units structurally assigned (Case 19.11).
         attached_unit_ids: IDs of units attached (Case 3.1 "Attached").
         current_toe: Present TOE Strength Points (Case 4.46). <= stats.max_toe_strength.
         current_morale: Current morale, may exceed basic via success (Case 17.0).
@@ -239,10 +254,12 @@ class Unit:
     unit_type: UnitType
     unit_class: UnitClass
     org_size: OrgSize
+    nationality: Nationality = Nationality.COMMONWEALTH
     stats: UnitStats = field(default_factory=UnitStats)
 
     position: Optional[HexCoord] = None
     parent_id: Optional[str] = None
+    assigned_unit_ids: list[str] = field(default_factory=list)
     attached_unit_ids: list[str] = field(default_factory=list)
 
     current_toe: int = 0

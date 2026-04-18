@@ -29,6 +29,7 @@ from cna.engine.game_state import (
     HexCoord,
     LogEntry,
     MapHex,
+    Nationality,
     OperationsStage,
     Phase,
     Player,
@@ -96,9 +97,11 @@ class UnitModel(BaseModel):
     unit_type: UnitType
     unit_class: UnitClass
     org_size: OrgSize
+    nationality: Nationality = Nationality.COMMONWEALTH
     stats: UnitStatsModel = Field(default_factory=UnitStatsModel)
     position: HexCoordModel | None = None
     parent_id: str | None = None
+    assigned_unit_ids: list[str] = Field(default_factory=list)
     attached_unit_ids: list[str] = Field(default_factory=list)
     current_toe: int = 0
     current_morale: int = 0
@@ -186,9 +189,11 @@ def _unit_to_model(u: Unit) -> UnitModel:
         unit_type=u.unit_type,
         unit_class=u.unit_class,
         org_size=u.org_size,
+        nationality=u.nationality,
         stats=UnitStatsModel(**u.stats.__dict__),
         position=_coord_to_model(u.position) if u.position is not None else None,
         parent_id=u.parent_id,
+        assigned_unit_ids=list(u.assigned_unit_ids),
         attached_unit_ids=list(u.attached_unit_ids),
         current_toe=u.current_toe,
         current_morale=u.current_morale,
@@ -209,9 +214,11 @@ def _unit_from_model(m: UnitModel) -> Unit:
         unit_type=m.unit_type,
         unit_class=m.unit_class,
         org_size=m.org_size,
+        nationality=m.nationality,
         stats=UnitStats(**m.stats.model_dump()),
         position=_coord_from_model(m.position) if m.position is not None else None,
         parent_id=m.parent_id,
+        assigned_unit_ids=list(m.assigned_unit_ids),
         attached_unit_ids=list(m.attached_unit_ids),
         current_toe=m.current_toe,
         current_morale=m.current_morale,

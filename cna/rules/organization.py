@@ -1,29 +1,42 @@
 """Section 19.0 — Organization and Reorganization.
 
 Implements Cases 19.1-19.9: assigned vs attached units, attachment
-restrictions, formation organization charts, and rebuilding depleted
-units.
+restrictions, formation organization charts, shell unit detection,
+Axis battle groups, Commonwealth AT augmentation, and rebuilding
+depleted units.
 
 Key rules:
   - Case 19.11: Assigned = structural relationship. Attached = same hex,
     represented by parent counter.
+  - Case 19.2-19.3: Assignment limits per Formation Organization Chart.
   - Case 19.41: Attach/detach costs 1 CP to parent and child.
   - Case 19.42: Attaching unassigned unit costs 2 CP.
+  - Case 19.5: Maximum Attachment Chart limits.
   - Case 19.68: Rebuilding costs 1 CP per 2 TOE points absorbed.
+  - Case 19.7: Axis Battle Groups (Kampfgruppen).
+  - Case 19.9: Commonwealth battalion AT augmentation.
 
 Cross-references:
   - Case 3.3: HQ semantics.
   - Case 5.2 III.C: Organization Phase.
   - Case 6.12: All organization actions cost CP.
   - Case 9.2: Unit equivalents affected by composition.
+  - Case 9.26-9.28: Shell unit determination and org-size reduction.
 """
 
 from __future__ import annotations
 
+import math
+from typing import Optional
+
 from cna.engine.errors import RuleViolationError
 from cna.engine.game_state import (
     GameState,
+    Nationality,
+    OrgSize,
+    Side,
     Unit,
+    UnitType,
 )
 from cna.rules.capability_points import spend_cp
 
