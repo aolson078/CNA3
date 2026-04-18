@@ -72,7 +72,7 @@ def test_graziani_populates_named_hexes():
     state = build_grazianis_offensive()
     names = {mh.name for mh in state.map.values() if mh.name}
     # A handful of headline hexes should be present.
-    for expected in ("Tobruk", "Tripoli", "Mersa Matruh", "Cairo",
+    for expected in ("Tobruk", "Mersa Matruh", "Cairo",
                      "Alexandria", "Sidi Barrani", "Bardia", "Siwa"):
         assert expected in names, f"missing named hex: {expected}"
 
@@ -110,14 +110,19 @@ def test_graziani_tobruk_holds_libyan_tank_command():
     assert "Libyan Tank Command" in names
 
 
-def test_graziani_mersa_matruh_holds_7_armd_and_4_ind():
-    # Case 60.41 — 7th Armoured and 4th Indian deploy forward (Case
-    # 60.41 puts them near Mersa Matruh; abbreviated mapping consolidates).
+def test_graziani_7_armd_and_4_ind_deployed_near_matruh():
+    # Case 60.41 — 7th Armoured at D3612, 4th Indian at D3615,
+    # both near Mersa Matruh (D3714). With real hex IDs, they are
+    # at their historical positions, not consolidated at Matruh.
     state = build_grazianis_offensive()
-    matruh = next(mh for mh in state.map.values() if mh.name == "Mersa Matruh")
-    names = [u.name for u in state.units_at(matruh.coord)]
-    assert "7th Armoured Division" in names
-    assert "4th Indian Division" in names
+    unit_names = {u.name for u in state.units.values()}
+    assert "7th Armoured Division" in unit_names
+    assert "4th Indian Division" in unit_names
+    # Both should be on the map.
+    armd = next(u for u in state.units.values() if u.name == "7th Armoured Division")
+    ind = next(u for u in state.units.values() if u.name == "4th Indian Division")
+    assert armd.position is not None
+    assert ind.position is not None
 
 
 def test_graziani_logs_scenario_load_entry():

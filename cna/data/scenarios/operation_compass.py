@@ -31,16 +31,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from cna.data.maps.coords import hex_id_to_coord
+from cna.data.maps.map_builder import build_operational_map
 from cna.engine.game_state import (
     GameState,
     HexCoord,
-    MapHex,
     OperationsStage,
     OrgSize,
     Phase,
     Player,
     Side,
-    TerrainType,
     Unit,
     UnitClass,
     UnitStats,
@@ -57,89 +57,6 @@ from cna.rules.initiative import InitiativeRatings, set_initiative_ratings
 
 SCENARIO_ID_GRAZIANI = "operation_compass.grazianis_offensive"
 SCENARIO_ID_ITALIAN_CAMPAIGN = "operation_compass.italian_campaign"
-
-
-# ---------------------------------------------------------------------------
-# Named hexes (Case 60 deployment)
-# ---------------------------------------------------------------------------
-
-
-@dataclass(frozen=True)
-class NamedHex:
-    """A rulebook-named hex with a placeholder axial coordinate.
-
-    The *rulebook_id* preserves the Case 60.3x designations (e.g. C4807 for
-    Tobruk). The *coord* field is a provisional axial coord chosen to give
-    a sensible spatial layout for the abbreviated map; it will be replaced
-    when the full Case 4.0 hex map is transcribed.
-    """
-
-    name: str
-    rulebook_id: str
-    coord: HexCoord
-    terrain: TerrainType
-    port_capacity: int = 0
-    has_airfield: bool = False
-    has_landing_strip: bool = False
-    controller: Side | None = None
-
-
-# Provisional axial coords — roughly west-to-east along the coast.
-# TODO-4.0: replace with real axial coords once the hex map is encoded.
-_NAMED_HEXES: tuple[NamedHex, ...] = (
-    # Axis-controlled (Libya) — west to east.
-    NamedHex("Tripoli", "box", HexCoord(-14, 0), TerrainType.CITY,
-            port_capacity=8, has_airfield=True, controller=Side.AXIS),
-    NamedHex("El Agheila", "A1816", HexCoord(-10, 0), TerrainType.DESERT,
-            has_landing_strip=True, controller=Side.AXIS),
-    NamedHex("Benghazi", "B4827", HexCoord(-7, -1), TerrainType.CITY,
-            port_capacity=4, controller=Side.AXIS),
-    NamedHex("Barce", "B5504", HexCoord(-6, -1), TerrainType.TOWN,
-            has_airfield=True, controller=Side.AXIS),
-    NamedHex("Derna", "B5925", HexCoord(-4, -1), TerrainType.PORT,
-            port_capacity=2, controller=Side.AXIS),
-    NamedHex("Mechili", "B4921", HexCoord(-5, 1), TerrainType.DESERT,
-            controller=Side.AXIS),
-    NamedHex("Tobruk", "C4807", HexCoord(-2, -1), TerrainType.PORT,
-            port_capacity=4, controller=Side.AXIS),
-    NamedHex("El Adem", "C4507", HexCoord(-2, 0), TerrainType.DESERT,
-            has_airfield=True, controller=Side.AXIS),
-    NamedHex("Bardia", "C4321", HexCoord(-1, -1), TerrainType.TOWN,
-            has_landing_strip=True, controller=Side.AXIS),
-    NamedHex("Fort Capuzzo", "C4020", HexCoord(0, 0), TerrainType.DESERT,
-            has_landing_strip=True, controller=Side.AXIS),
-    NamedHex("Sidi Omar", "C3618", HexCoord(1, 1), TerrainType.DESERT,
-            has_landing_strip=True, controller=Side.AXIS),
-    NamedHex("Fort Maddalena", "C3019", HexCoord(2, 1), TerrainType.DESERT,
-            controller=Side.AXIS),
-    NamedHex("Giarabub", "C1014", HexCoord(4, 4), TerrainType.OASIS,
-            has_landing_strip=True, controller=Side.AXIS),
-    # Contested frontier (initially Axis per 60.31).
-    NamedHex("Sidi Barrani", "C4131", HexCoord(3, -1), TerrainType.DESERT,
-            has_landing_strip=True, controller=Side.COMMONWEALTH),
-    NamedHex("Buq Buq", "C3926", HexCoord(4, -1), TerrainType.DESERT,
-            has_landing_strip=True, controller=Side.COMMONWEALTH),
-    # Commonwealth-controlled (Egypt).
-    NamedHex("Mersa Matruh", "D3714", HexCoord(6, 0), TerrainType.PORT,
-            port_capacity=2, has_airfield=True, controller=Side.COMMONWEALTH),
-    NamedHex("Fuka", "D3323", HexCoord(7, -1), TerrainType.DESERT,
-            has_landing_strip=True, controller=Side.COMMONWEALTH),
-    NamedHex("El Alamein", "E1829", HexCoord(9, -1), TerrainType.DESERT,
-            controller=Side.COMMONWEALTH),
-    NamedHex("Alexandria", "E3614", HexCoord(11, -1), TerrainType.CITY,
-            port_capacity=8, has_airfield=True, controller=Side.COMMONWEALTH),
-    NamedHex("Cairo", "E1430", HexCoord(11, 1), TerrainType.CITY,
-            has_airfield=True, controller=Side.COMMONWEALTH),
-    NamedHex("Siwa", "C0127", HexCoord(6, 3), TerrainType.OASIS,
-            has_landing_strip=True, controller=Side.COMMONWEALTH),
-)
-
-
-def _named_hex(name: str) -> NamedHex:
-    for nh in _NAMED_HEXES:
-        if nh.name == name:
-            return nh
-    raise KeyError(f"No named hex: {name}")
 
 
 # ---------------------------------------------------------------------------
@@ -164,55 +81,56 @@ class _UnitSpec:
     max_toe: int
     cpa: int
     morale: int
-    location: str  # Name of NamedHex or "off_map"
+    location: str  # Game hex ID (e.g. "C4218") or "off_map"
 
 
 # Italian Initial Deployment — Case 60.31. Abbreviated to the headline
 # divisions and a single representative armored formation. Item details
 # like attached corps artillery and truck pools are deferred.
 _AXIS_OOB: tuple[_UnitSpec, ...] = (
+    # Case 60.31 — Italian Initial Deployment (abbreviated).
     _UnitSpec("ax.1ccnn", "1st CCNN Division", UnitType.INFANTRY,
              UnitClass.INFANTRY, OrgSize.DIVISION, max_toe=12, cpa=8, morale=0,
-             location="Sidi Barrani"),
+             location="C4218"),
     _UnitSpec("ax.63cirene", "63rd Cirene Division", UnitType.INFANTRY,
              UnitClass.INFANTRY, OrgSize.DIVISION, max_toe=12, cpa=8, morale=0,
-             location="Fort Capuzzo"),
+             location="C4120"),
     _UnitSpec("ax.1libyan", "1st Libyan Division", UnitType.INFANTRY,
              UnitClass.INFANTRY, OrgSize.DIVISION, max_toe=10, cpa=8, morale=-1,
-             location="Fort Capuzzo"),
+             location="C4020"),
     _UnitSpec("ax.2libyan", "2nd Libyan Division", UnitType.INFANTRY,
              UnitClass.INFANTRY, OrgSize.DIVISION, max_toe=10, cpa=8, morale=-1,
-             location="Sidi Omar"),
+             location="C3920"),
     _UnitSpec("ax.62marmar", "62nd Marmarica Division", UnitType.INFANTRY,
              UnitClass.INFANTRY, OrgSize.DIVISION, max_toe=12, cpa=8, morale=0,
-             location="Sidi Omar"),
+             location="C3918"),
     _UnitSpec("ax.maletti", "Maletti Division", UnitType.INFANTRY,
              UnitClass.INFANTRY, OrgSize.DIVISION, max_toe=10, cpa=8, morale=0,
-             location="Sidi Omar"),
+             location="C3617"),
     _UnitSpec("ax.64catanz", "64th Catanzaro Division", UnitType.INFANTRY,
              UnitClass.INFANTRY, OrgSize.DIVISION, max_toe=12, cpa=8, morale=0,
-             location="Bardia"),
+             location="C4707"),
     _UnitSpec("ax.4ccnn", "4th CCNN Division", UnitType.INFANTRY,
              UnitClass.INFANTRY, OrgSize.DIVISION, max_toe=12, cpa=8, morale=0,
-             location="Bardia"),
+             location="C4507"),
     _UnitSpec("ax.trivoli", "Trivoli Regiment", UnitType.TANK,
              UnitClass.ARMOR, OrgSize.BRIGADE, max_toe=6, cpa=10, morale=1,
-             location="Bardia"),
+             location="C4321"),
     _UnitSpec("ax.libtkcmd", "Libyan Tank Command", UnitType.HEADQUARTERS,
              UnitClass.ARMOR, OrgSize.DIVISION, max_toe=6, cpa=10, morale=1,
-             location="Tobruk"),
+             location="C4807"),
     _UnitSpec("ax.aresca", "Aresca Regiment", UnitType.TANK,
              UnitClass.ARMOR, OrgSize.BRIGADE, max_toe=6, cpa=10, morale=0,
-             location="Sidi Omar"),
+             location="C3919"),
     _UnitSpec("ax.bengaz", "Benghazi Garrison", UnitType.INFANTRY,
              UnitClass.INFANTRY, OrgSize.BATTALION, max_toe=4, cpa=0, morale=-1,
-             location="Benghazi"),
+             location="B4827"),
     _UnitSpec("ax.derna", "Derna Garrison", UnitType.INFANTRY,
              UnitClass.INFANTRY, OrgSize.BATTALION, max_toe=4, cpa=0, morale=-1,
-             location="Derna"),
+             location="B5925"),
     _UnitSpec("ax.giarabub", "Giarabub Garrison", UnitType.INFANTRY,
              UnitClass.INFANTRY, OrgSize.BATTALION, max_toe=4, cpa=0, morale=-1,
-             location="Giarabub"),
+             location="C1014"),
     # TODO-60.31: 30+ additional formations (Saharan Det, XVIII/XXXII Lib,
     # garrison units, Tripolitania forces, coastal shipping, airfields).
 )
@@ -220,40 +138,41 @@ _AXIS_OOB: tuple[_UnitSpec, ...] = (
 
 # Commonwealth Initial Deployment — Case 60.41.
 _COMMONWEALTH_OOB: tuple[_UnitSpec, ...] = (
+    # Case 60.41 — Commonwealth Initial Deployment (abbreviated).
     _UnitSpec("cw.7armd", "7th Armoured Division",
              UnitType.HEADQUARTERS, UnitClass.ARMOR, OrgSize.DIVISION,
-             max_toe=14, cpa=12, morale=2, location="Mersa Matruh"),
+             max_toe=14, cpa=12, morale=2, location="D3612"),
     _UnitSpec("cw.4ind", "4th Indian Division",
              UnitType.HEADQUARTERS, UnitClass.INFANTRY, OrgSize.DIVISION,
-             max_toe=14, cpa=10, morale=2, location="Mersa Matruh"),
+             max_toe=14, cpa=10, morale=2, location="D3615"),
     _UnitSpec("cw.matruh", "Matruh Garrison",
              UnitType.INFANTRY, UnitClass.INFANTRY, OrgSize.BRIGADE,
-             max_toe=8, cpa=8, morale=1, location="Mersa Matruh"),
+             max_toe=8, cpa=8, morale=1, location="D3714"),
     _UnitSpec("cw.2nz", "2nd New Zealand Division",
              UnitType.HEADQUARTERS, UnitClass.INFANTRY, OrgSize.DIVISION,
-             max_toe=12, cpa=10, morale=2, location="Alexandria"),
+             max_toe=12, cpa=10, morale=2, location="E3613"),
     _UnitSpec("cw.16bde", "16th Infantry Brigade",
              UnitType.INFANTRY, UnitClass.INFANTRY, OrgSize.BRIGADE,
-             max_toe=8, cpa=10, morale=2, location="El Alamein"),
+             max_toe=8, cpa=10, morale=2, location="E1829"),
     _UnitSpec("cw.2scots", "2nd Scots Guards",
              UnitType.INFANTRY, UnitClass.INFANTRY, OrgSize.BATTALION,
-             max_toe=6, cpa=10, morale=2, location="Sidi Barrani"),
+             max_toe=6, cpa=10, morale=2, location="C4131"),
     _UnitSpec("cw.3cold", "3rd Coldstream Guards",
              UnitType.INFANTRY, UnitClass.INFANTRY, OrgSize.BATTALION,
-             max_toe=6, cpa=10, morale=2, location="Buq Buq"),
+             max_toe=6, cpa=10, morale=2, location="C3922"),
     _UnitSpec("cw.11hus", "11th Hussars",
              UnitType.RECCE, UnitClass.ARMOR, OrgSize.BATTALION,
-             max_toe=4, cpa=14, morale=3, location="Sidi Barrani"),
+             max_toe=4, cpa=14, morale=3, location="C3020"),
     _UnitSpec("cw.6aus", "6th Australian Division (Training)",
              UnitType.HEADQUARTERS, UnitClass.INFANTRY, OrgSize.DIVISION,
-             max_toe=12, cpa=10, morale=1, location="Cairo"),
+             max_toe=12, cpa=10, morale=1, location="E1430"),
     # TODO-60.41: remaining corps artillery, regional artillery regiments,
     # Malta forces, Free French detachments, fleet counters (Case 60.45).
 )
 
 
-def _unit_from_spec(spec: _UnitSpec, side: Side, hex_index: dict[str, HexCoord]) -> Unit:
-    pos = hex_index.get(spec.location) if spec.location != "off_map" else None
+def _unit_from_spec(spec: _UnitSpec, side: Side) -> Unit:
+    pos = hex_id_to_coord(spec.location) if spec.location != "off_map" else None
     return Unit(
         id=spec.uid,
         side=side,
@@ -296,27 +215,15 @@ def _build_common(scenario_id: str, name: str, length_turns: int) -> GameState:
         side=Side.COMMONWEALTH, name="Commonwealth Player"
     )
 
-    # Build the abbreviated map.
-    hex_index: dict[str, HexCoord] = {}
-    for nh in _NAMED_HEXES:
-        mh = MapHex(
-            coord=nh.coord,
-            terrain=nh.terrain,
-            name=nh.name,
-            port_capacity=nh.port_capacity,
-            has_airfield=nh.has_airfield,
-            has_landing_strip=nh.has_landing_strip,
-            controller=nh.controller,
-        )
-        state.map[nh.coord] = mh
-        hex_index[nh.name] = nh.coord
+    # Build the full operational map from the hex catalog.
+    state.map = build_operational_map()
 
     # Populate OOB.
     for spec in _AXIS_OOB:
-        u = _unit_from_spec(spec, Side.AXIS, hex_index)
+        u = _unit_from_spec(spec, Side.AXIS)
         state.units[u.id] = u
     for spec in _COMMONWEALTH_OOB:
-        u = _unit_from_spec(spec, Side.COMMONWEALTH, hex_index)
+        u = _unit_from_spec(spec, Side.COMMONWEALTH)
         state.units[u.id] = u
 
     # Case 60.6 — Italian Player has Initiative for the entire first Game-Turn.
