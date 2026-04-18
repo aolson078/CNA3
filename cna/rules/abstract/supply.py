@@ -29,6 +29,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from cna.engine.errors import RuleViolationError
 from cna.engine.game_state import GameState, HexCoord, Side, Unit
 from cna.engine.hex_map import HexMap, distance
 from cna.rules.capability_points import effective_cpa
@@ -142,3 +143,127 @@ class MotorizationPool:
         loss = max(1, self.points * MOTORIZATION_MONTHLY_LOSS_PCT // 100)
         self.points = max(0, self.points - loss)
         return loss
+
+
+# ---------------------------------------------------------------------------
+# Supply Pool — per-side aggregate (Case 32.0 / 60.92)
+# ---------------------------------------------------------------------------
+
+SUPPLY_POOL_KEY = "supply_pool"
+
+
+@dataclass
+class SupplyPool:
+    """Per-side aggregate supply pool for abstract logistics.
+
+    Case 32.0 / 60.92 — Tracks total ammo and fuel available to a side.
+    Stored in GameState.extras["supply_pool"][side.value].
+    """
+    ammo: int = 0
+    fuel: int = 0
+
+    def spend_ammo(self, amount: int) -> int:
+        """Spend ammo, capped at available. Returns amount actually spent (Case 32.21)."""
+        actual = min(amount, self.ammo)
+        self.ammo -= actual
+        return actual
+
+    def spend_fuel(self, amount: int) -> int:
+        """Spend fuel, capped at available. Returns amount actually spent (Case 32.22)."""
+        actual = min(amount, self.fuel)
+        self.fuel -= actual
+        return actual
+
+    def has_ammo(self, amount: int = 1) -> bool:
+        """Case 32.21 — Whether enough ammo is available."""
+        return self.ammo >= amount
+
+    def has_fuel(self, amount: int = 1) -> bool:
+        """Case 32.22 — Whether enough fuel is available."""
+        return self.fuel >= amount
+
+
+def get_supply_pool(state: GameState, side: Side) -> SupplyPool:
+    """Retrieve the SupplyPool for *side* from state extras.
+
+    Case 32.0 — Creates a default empty pool if not initialized.
+    """
+    raw = state.extras.get(SUPPLY_POOL_KEY)
+    if not isinstance(raw, dict):
+        raw = {}
+        state.extras[SUPPLY_POOL_KEY] = raw
+    side_data = raw.get(side.value)
+    if not isinstance(side_data, dict):
+        side_data = {"ammo": 0, "fuel": 0}
+        raw[side.value] = side_data
+    return SupplyPool(ammo=side_data.get("ammo", 0), fuel=side_data.get("fuel", 0))
+
+
+def save_supply_pool(state: GameState, side: Side, pool: SupplyPool) -> None:
+    """Write the SupplyPool back to state extras (Case 32.0)."""
+    raw = state.extras.setdefault(SUPPLY_POOL_KEY, {})
+    raw[side.value] = {"ammo": pool.ammo, "fuel": pool.fuel}
+
+
+def init_supply_pools(state: GameState, axis_ammo: int, axis_fuel: int,
+                      cw_ammo: int, cw_fuel: int) -> None:
+    """Initialize supply pools for both sides (Case 60.92).
+
+    Called by scenario setup.
+    """
+    state.extras[SUPPLY_POOL_KEY] = {
+        Side.AXIS.value: {"ammo": axis_ammo, "fuel": axis_fuel},
+        Side.COMMONWEALTH.value: {"ammo": cw_ammo, "fuel": cw_fuel},
+    }
+
+
+# ---------------------------------------------------------------------------
+# Supply consumption hooks
+# ---------------------------------------------------------------------------
+
+
+def consume_movement_fuel(state: GameState, unit: Unit, hexes_moved: int) -> SupplyExpenditure:
+    """Consume fuel for unit movement (Case 32.22).
+
+    Case 32.22 — Motorized units consume 1 fuel per movement ops stage.
+    Non-motorized units do not consume fuel.
+    """
+    from cna.rules.land_movement import is_motorized
+    if not is_motorized(unit) or hexes_moved <= 0:
+        return SupplyExpenditure(unit_id=unit.id, action="movement")
+
+    pool = get_supply_pool(state, unit.side)
+    fuel_cost = FUEL_COST_MOVEMENT
+    spent = pool.spend_fuel(fuel_cost)
+    save_supply_pool(state, unit.side, pool)
+    return SupplyExpenditure(fuel=spent, unit_id=unit.id, action="movement")
+
+
+def consume_combat_ammo(
+    state: GameState,
+    side: Side,
+    *,
+    is_phasing: bool,
+    is_barrage: bool = False,
+    is_probe: bool = False,
+) -> SupplyExpenditure:
+    """Consume ammo for combat (Case 32.21).
+
+    Case 32.21:
+      - Non-phasing defender: 1 ammo per assault.
+      - Barrage: 2 ammo.
+      - Phasing attacker: 2 ammo (assault), 2 ammo (barrage).
+      - Probe: 1 ammo (phasing).
+    """
+    pool = get_supply_pool(state, side)
+
+    if is_barrage:
+        cost = AMMO_COST_BARRAGE
+    elif is_phasing:
+        cost = 1 if is_probe else AMMO_COST_ATTACK
+    else:
+        cost = AMMO_COST_DEFEND
+
+    spent = pool.spend_ammo(cost)
+    save_supply_pool(state, side, pool)
+    return SupplyExpenditure(ammo=spent, unit_id="", action="combat")

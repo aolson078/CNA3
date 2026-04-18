@@ -46,6 +46,7 @@ from cna.rules.initiative import (
     handle_initiative_declaration_phase,
     handle_initiative_determination_phase,
 )
+from cna.rules.abstract.supply import consume_combat_ammo, consume_movement_fuel
 from cna.rules.combat.resolver import CombatReport, resolve_combat
 from cna.rules.land_movement import move_unit, validate_move, MoveResult
 from cna.rules.reserves import handle_reserve_release
@@ -413,7 +414,12 @@ class App:
                 try:
                     result = move_unit(self.state, unit.id, path)
                     self.selected = target
+                    fuel_exp = consume_movement_fuel(
+                        self.state, unit, len(result.path) - 1,
+                    )
                     cp_msg = f"{result.cp_spent} CP"
+                    if fuel_exp.fuel:
+                        cp_msg += f", {fuel_exp.fuel} fuel"
                     if result.dp_earned:
                         cp_msg += f", {result.dp_earned} DP"
                     if result.stopped_by_zoc:
@@ -481,9 +487,20 @@ class App:
             report = resolve_combat(
                 self.state, self.selected, target_hex, is_probe=is_probe,
             )
+            # Consume ammo (Case 32.21).
+            att_ammo = consume_combat_ammo(
+                self.state, active, is_phasing=True,
+                is_barrage=report.barrage is not None, is_probe=is_probe,
+            )
+            def_ammo = consume_combat_ammo(
+                self.state, enemy_side, is_phasing=False, is_probe=is_probe,
+            )
             label = "Probe" if is_probe else "Assault"
+            ammo_msg = ""
+            if att_ammo.ammo or def_ammo.ammo:
+                ammo_msg = f" [ammo: att {att_ammo.ammo}, def {def_ammo.ammo}]"
             self.state.log(
-                f"{label} {self.selected}→{target_hex}: {report.summary}",
+                f"{label} {self.selected}→{target_hex}: {report.summary}{ammo_msg}",
                 category="combat",
                 data={
                     "attacker_hex": str(self.selected),
@@ -492,6 +509,8 @@ class App:
                     "def_toe_lost": report.defender_toe_lost,
                     "att_cp": report.attacker_cp_spent,
                     "def_cp": report.defender_cp_spent,
+                    "att_ammo": att_ammo.ammo,
+                    "def_ammo": def_ammo.ammo,
                     "is_probe": is_probe,
                 },
             )

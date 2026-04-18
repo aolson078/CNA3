@@ -40,6 +40,7 @@ from cna.engine.game_state import (
     Side,
     WeatherState,
 )
+from cna.rules.abstract.supply import init_supply_pools
 from cna.rules.initiative import InitiativeRatings, set_initiative_ratings
 
 
@@ -92,6 +93,16 @@ def _build_common(scenario_id: str, name: str, length_turns: int) -> GameState:
     # Case 7.14 example values (Axis no-Germans = 1, CW turns 1-42 = 3).
     # Turn 1 of the Italian Campaign is 15 September 1940.
     set_initiative_ratings(state, InitiativeRatings(axis=1, commonwealth=3))
+
+    # Case 60.92 — Abstract supply (Land Game Only).
+    # Axis: dumps at Tobruk, Bardia, Benghazi, Derna, Tripoli + field dumps.
+    # CW: dumps at Matruh, Sidi Barrani + unlimited at Cairo/Alexandria.
+    # Simplified to aggregate pools.
+    init_supply_pools(
+        state,
+        axis_ammo=3000, axis_fuel=2500,
+        cw_ammo=5000, cw_fuel=7000,
+    )
 
     # Scenario metadata for the UI / victory checker.
     state.extras["scenario_name"] = name

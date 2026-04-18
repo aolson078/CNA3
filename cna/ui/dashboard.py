@@ -132,12 +132,34 @@ def render_header(view: GameView) -> Panel:
     right.append("   Viewer: ")
     right.append_text(side_label(view.viewer))
 
+    # Supply status (Case 32.0).
+    supply_text = _render_supply_line(state, view.viewer)
+
     table = Table.grid(expand=True)
     table.add_column(justify="left", ratio=2)
     table.add_column(justify="center", ratio=1)
     table.add_column(justify="right", ratio=2)
     table.add_row(left, mid, right)
+    if supply_text:
+        table.add_row(supply_text, Text(""), Text(""))
     return Panel(table, border_style="bright_blue", padding=(0, 1))
+
+
+def _render_supply_line(state, viewer: Side) -> Text:
+    """Render supply pool status for the viewer's side (Case 32.0)."""
+    from cna.rules.abstract.supply import get_supply_pool, SUPPLY_POOL_KEY
+    raw = state.extras.get(SUPPLY_POOL_KEY)
+    if not raw:
+        return Text("")
+    pool = get_supply_pool(state, viewer)
+    t = Text()
+    t.append("Supply: ", style="dim")
+    ammo_style = "green" if pool.ammo > 500 else ("yellow" if pool.ammo > 100 else "red")
+    fuel_style = "green" if pool.fuel > 500 else ("yellow" if pool.fuel > 100 else "red")
+    t.append(f"Ammo {pool.ammo}", style=ammo_style)
+    t.append("  ")
+    t.append(f"Fuel {pool.fuel}", style=fuel_style)
+    return t
 
 
 def _weather_style(w: WeatherState) -> str:
@@ -455,7 +477,7 @@ def build_layout(view: GameView, *, selected: Optional[HexCoord] = None) -> Layo
     """
     layout = Layout()
     layout.split_column(
-        Layout(name="header", size=3),
+        Layout(name="header", size=4),
         Layout(name="body"),
         Layout(name="footer", size=8),
     )
