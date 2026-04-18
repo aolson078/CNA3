@@ -104,6 +104,42 @@ def _build_common(scenario_id: str, name: str, length_turns: int) -> GameState:
         cw_ammo=5000, cw_fuel=7000,
     )
 
+    # Case 60.47 / 20.11 — Reinforcement schedule.
+    # Historical arrivals for Operation Compass / Italian Campaign.
+    state.extras["reinforcement_schedule"] = [
+        {"unit_id": "cw.7rtr", "arrival_turn": 7, "hex": "Alexandria",
+         "side": "commonwealth"},
+        {"unit_id": "cw.2rtr", "arrival_turn": 8, "hex": "Alexandria",
+         "side": "commonwealth"},
+        {"unit_id": "cw.19aus_bde", "arrival_turn": 10, "hex": "Cairo",
+         "side": "commonwealth"},
+        {"unit_id": "cw.6div_arty", "arrival_turn": 10, "hex": "Cairo",
+         "side": "commonwealth"},
+    ]
+    state.extras["reinforcement_units"] = {
+        "cw.7rtr": {
+            "name": "7th RTR", "unit_type": "tank", "unit_class": "armor",
+            "org_size": "battalion", "cpa": 25, "toe": 4, "morale": 2,
+            "off_ca": 7, "def_ca": 7, "anti_armor": 5, "armor_prot": 6,
+        },
+        "cw.2rtr": {
+            "name": "2nd RTR", "unit_type": "tank", "unit_class": "armor",
+            "org_size": "battalion", "cpa": 25, "toe": 4, "morale": 2,
+            "off_ca": 7, "def_ca": 7, "anti_armor": 5, "armor_prot": 2,
+        },
+        "cw.19aus_bde": {
+            "name": "19th Australian Brigade", "unit_type": "infantry",
+            "unit_class": "infantry", "org_size": "brigade",
+            "cpa": 8, "toe": 8, "morale": 2, "off_ca": 7, "def_ca": 7,
+        },
+        "cw.6div_arty": {
+            "name": "6th Div Artillery", "unit_type": "artillery",
+            "unit_class": "gun", "org_size": "battalion",
+            "cpa": 15, "toe": 4, "morale": 2, "barrage": 12,
+            "off_ca": 2, "def_ca": 3, "anti_armor": 3,
+        },
+    }
+
     # Scenario metadata for the UI / victory checker.
     state.extras["scenario_name"] = name
     state.extras["scenario_length_turns"] = length_turns

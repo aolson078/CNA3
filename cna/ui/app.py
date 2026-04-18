@@ -51,6 +51,7 @@ from cna.rules.combat.resolver import CombatReport, resolve_combat
 from cna.rules.land_movement import move_unit, validate_move, MoveResult
 from cna.rules.reserves import handle_reserve_release
 from cna.rules.special.weather import handle_weather_phase
+from cna.rules.units.reinforcements import handle_naval_convoy_arrival
 from cna.ui.dashboard import build_layout, render_commands
 from cna.ui.views import build_view
 
@@ -213,6 +214,10 @@ class App:
         self._driver.register(
             Phase.WEATHER_DETERMINATION,
             handle_weather_phase,
+        )
+        self._driver.register(
+            Phase.NAVAL_CONVOY_ARRIVAL,
+            handle_naval_convoy_arrival,
         )
         self._driver.register(
             Phase.PATROL,
