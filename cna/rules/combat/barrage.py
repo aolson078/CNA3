@@ -50,29 +50,49 @@ class GunPosition(str, Enum):
 # Barrage Results Table (Case 12.6)
 # ---------------------------------------------------------------------------
 
-# The BRT is indexed by (barrage_points_band, dice_roll).
-# Results: -1 = Pinned, 0 = no effect, positive = TOE losses.
-# OCR is heavily garbled; these are placeholder rows that capture the
-# basic shape: higher barrage points + higher rolls → more damage.
-# TODO-12.6: replace with manually verified BRT.
+# The BRT is indexed by (barrage_points_band, sequential_dice_roll).
+# Results: -1 = Pinned (no losses), -2 = Pinned + 1 TOE loss,
+# 0 = no effect, positive = TOE losses without pinning.
+#
+# Extracted from Case 12.6 OCR (references/section_12.md lines 437-490).
+# The table has columns by target class (Infantry, Armor, Gun) and rows
+# by barrage point band. Each cell has a dice range → result mapping.
+#
+# Format: (min_bp, max_bp) → list of (dice_max, result) tuples.
+# Dice are sequential (11-66). First matching band wins.
+# Result: 0=no effect, -1=pinned, 1+=TOE losses (pinned implied).
 
-# Dice roll bands for sequential 2d6 (11-66).
-# We bucket into 6 columns: 11-21, 22-32, 33-43, 44-54, 55-65, 66.
-_DICE_BANDS: list[tuple[int, int]] = [
-    (11, 21), (22, 32), (33, 43), (44, 54), (55, 65), (66, 66),
+_BRT_INFANTRY: list[tuple[tuple[int, int], tuple[tuple[int, int], ...]]] = [
+    ((1, 2),   ((34, 0), (64, -1), (66, 1))),
+    ((3, 4),   ((24, 0), (61, -1), (66, 1))),
+    ((5, 6),   ((16, 0), (44, -1), (55, -2), (66, 1))),
+    ((7, 8),   ((12, 0), (35, -1), (55, -2), (66, 2))),
+    ((9, 10),  ((31, -1), (56, -2), (65, 1), (66, 2))),
+    ((11, 12), ((31, -1), (55, -2), (63, 1), (66, 2))),
+    ((13, 14), ((32, -1), (55, -2), (62, 1), (65, 2), (66, 3))),
+    ((15, 99), ((31, -1), (54, -2), (62, 1), (65, 2), (66, 3))),
 ]
 
-# BRT rows keyed by (min_barrage, max_barrage) → list of results per band.
-# Negative = Pinned (-1).
-_BRT: list[tuple[tuple[int, int], list[int]]] = [
-    ((1, 2),   [0, 0, 0, -1, -1, 1]),
-    ((3, 4),   [0, 0, -1, -1, 1, 1]),
-    ((5, 6),   [0, -1, -1, 1, 1, 2]),
-    ((7, 8),   [0, -1, 1, 1, 2, 2]),
-    ((9, 10),  [-1, -1, 1, 1, 2, 3]),
-    ((11, 12), [-1, 1, 1, 2, 2, 3]),
-    ((13, 14), [-1, 1, 1, 2, 3, 4]),
-    ((15, 99), [-1, 1, 2, 2, 3, 5]),
+_BRT_ARMOR: list[tuple[tuple[int, int], tuple[tuple[int, int], ...]]] = [
+    ((1, 2),   ((31, 0), (66, -1))),
+    ((3, 4),   ((22, 0), (66, -1))),
+    ((5, 6),   ((63, -1), (66, 0))),
+    ((7, 8),   ((62, -1), (66, 1))),
+    ((9, 10),  ((54, -1), (66, 1))),
+    ((11, 12), ((56, -1), (65, 1), (66, 2))),
+    ((13, 14), ((41, -1), (56, 0), (66, 1))),
+    ((15, 99), ((41, -1), (56, 0), (65, 1), (66, 2))),
+]
+
+_BRT_GUN: list[tuple[tuple[int, int], tuple[tuple[int, int], ...]]] = [
+    ((1, 2),   ((66, 0),)),
+    ((3, 4),   ((56, 0), (66, 1))),
+    ((5, 6),   ((41, 0), (66, 1))),
+    ((7, 8),   ((31, 0), (56, 1), (66, 2))),
+    ((9, 10),  ((22, 0), (44, 1), (66, 2))),
+    ((11, 12), ((31, 0), (44, 1), (56, 2), (66, 3))),
+    ((13, 14), ((22, 0), (41, 1), (56, 2), (66, 3))),
+    ((15, 99), ((22, 0), (36, 1), (53, 2), (66, 3))),
 ]
 
 
@@ -88,27 +108,55 @@ class BarrageResult:
     barrage_points: int = 0
 
 
-def _dice_band_index(roll: int) -> int:
-    for i, (lo, hi) in enumerate(_DICE_BANDS):
-        if lo <= roll <= hi:
-            return i
-    return len(_DICE_BANDS) - 1
+class TargetClass(str, Enum):
+    """Case 3.22 — Target class for barrage resolution."""
+    INFANTRY = "infantry"
+    ARMOR = "armor"
+    GUN = "gun"
+
+
+def _lookup_brt(
+    table: list[tuple[tuple[int, int], tuple[tuple[int, int], ...]]],
+    barrage_points: int,
+    dice_roll: int,
+) -> int:
+    """Look up a result in a BRT sub-table (Case 12.6).
+
+    Returns: 0=no effect, -1=pinned, -2=pinned+1 loss, positive=losses.
+    """
+    for (lo, hi), bands in table:
+        if lo <= barrage_points <= hi:
+            for dice_max, result in bands:
+                if dice_roll <= dice_max:
+                    return result
+            return bands[-1][1] if bands else 0
+    # Above max → use last row.
+    last_bands = table[-1][1]
+    for dice_max, result in last_bands:
+        if dice_roll <= dice_max:
+            return result
+    return last_bands[-1][1] if last_bands else 0
 
 
 def resolve_barrage(
     barrage_actual_points: int,
     dice: DiceRoller,
     *,
+    target_class: TargetClass = TargetClass.INFANTRY,
     column_shifts: int = 0,
 ) -> BarrageResult:
     """Resolve a single barrage against a target hex.
 
-    Case 12.6 — Roll on the Barrage Results Table.
+    Case 12.6 — Roll on the Barrage Results Table. The table is indexed
+    by target class (Infantry, Armor, Gun), barrage points, and a
+    sequential dice roll (11-66).
 
     Args:
         barrage_actual_points: Total Actual Barrage Points directed at target.
         dice: DiceRoller for the sequential roll.
-        column_shifts: Terrain/fortification shifts (negative = left/defender benefit).
+        target_class: What type of units are being barraged.
+        column_shifts: Terrain/fortification shifts applied to barrage
+            points (negative = reduce effective points).
 
     Returns:
         BarrageResult with pinned flag and/or TOE losses.
@@ -116,22 +164,27 @@ def resolve_barrage(
     if barrage_actual_points <= 0:
         return BarrageResult()
 
-    roll = dice.roll_concat()
-    band = _dice_band_index(roll)
-    band = max(0, min(band + column_shifts, len(_DICE_BANDS) - 1))
+    effective_bp = max(0, barrage_actual_points + column_shifts)
+    if effective_bp <= 0:
+        return BarrageResult()
 
-    # Find the BRT row.
-    result_val = 0
-    for (lo, hi), results in _BRT:
-        if lo <= barrage_actual_points <= hi:
-            result_val = results[band]
-            break
-    else:
-        # Above max → use last row.
-        result_val = _BRT[-1][1][band]
+    roll = dice.roll_concat()
+
+    table = {
+        TargetClass.INFANTRY: _BRT_INFANTRY,
+        TargetClass.ARMOR: _BRT_ARMOR,
+        TargetClass.GUN: _BRT_GUN,
+    }[target_class]
+
+    result_val = _lookup_brt(table, effective_bp, roll)
 
     pinned = result_val < 0
-    losses = max(0, result_val)
+    losses = 0
+    if result_val == -2:
+        losses = 1
+    elif result_val > 0:
+        losses = result_val
+
     return BarrageResult(
         pinned=pinned,
         toe_losses=losses,

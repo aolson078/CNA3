@@ -219,32 +219,105 @@ class CloseAssaultResult:
     differential: int = 0
 
 
-# The CRT maps final differential to (attacker_loss_pct, defender_loss_pct).
-# OCR is too garbled for exact values; this is a simplified model.
-# TODO-15.7: replace with manually verified CRT.
-_CRT_TABLE: list[tuple[int, int, int, int, int]] = [
-    # (min_diff, max_diff, att_loss_%, def_loss_%, retreat_hexes)
-    (-99, -11, 50, 5,  0),
-    (-10, -8,  40, 5,  0),
-    (-7,  -5,  30, 10, 0),
-    (-4,  -3,  25, 10, 0),
-    (-2,  -1,  20, 15, 0),
-    (0,    0,  15, 15, 0),
-    (1,    2,  15, 20, 1),
-    (3,    4,  10, 25, 2),
-    (5,    7,  10, 30, 2),
-    (8,   10,  5,  40, 3),
-    (11,  17,  5,  50, 3),  # Overrun range.
-    (18,  99,  5,  50, 3),
-]
+# The CRT maps (final differential, sequential dice roll) to loss
+# percentages for attacker and defender separately. Each column has dice
+# thresholds that determine which loss band applies.
+#
+# Extracted from Case 15.79 OCR (references/section_15.md lines 1346-1780).
+# Format: (min_diff, max_diff) → list of (dice_max, loss_pct) bands.
+# The dice roll is sequential (11-66); the first band whose dice_max >=
+# the roll determines the loss percentage. Higher roll = lighter losses.
+#
+# Engaged range and Retreat hexes are per-column.
+
+@dataclass(frozen=True)
+class _CRTColumn:
+    """One column of the Close Assault CRT (Case 15.79)."""
+    min_diff: int
+    max_diff: int
+    # Attacker loss bands: list of (dice_max, loss_pct). Ordered low→high.
+    att_bands: tuple[tuple[int, int], ...]
+    # Defender loss bands.
+    def_bands: tuple[tuple[int, int], ...]
+    retreat_hexes: int = 0
+    engaged_range: tuple[int, int] | None = None  # (min_sum, max_sum) on 2d6 sum
+    captured_range: tuple[int, int] | None = None
 
 
-def _lookup_crt(differential: int) -> tuple[int, int, int]:
-    """Return (att_loss_%, def_loss_%, retreat_hexes) for *differential*."""
-    for min_d, max_d, att, def_, ret in _CRT_TABLE:
-        if min_d <= differential <= max_d:
-            return att, def_, ret
-    return 15, 15, 0
+# Close Assault CRT extracted from Case 15.79 OCR.
+# Attacker rows: 50%, 40%, 30%, 25%, 20%, 15%, 10%, 5%.
+# Defender rows: same structure, with Retreat and Captured ranges.
+_CRT_COLUMNS: tuple[_CRTColumn, ...] = (
+    _CRTColumn(-99, -11,
+        att_bands=((15, 50), (24, 40), (33, 30), (36, 25), (46, 20), (56, 15), (63, 10), (66, 5)),
+        def_bands=((66, 5),),
+        engaged_range=(10, 12)),
+    _CRTColumn(-10, -8,
+        att_bands=((12, 50), (16, 40), (26, 30), (34, 25), (43, 20), (53, 15), (62, 10), (65, 5)),
+        def_bands=((13, 10), (26, 5)),
+        engaged_range=(10, 12)),
+    _CRTColumn(-7, -5,
+        att_bands=((12, 40), (23, 30), (32, 25), (41, 20), (51, 15), (56, 10), (63, 5)),
+        def_bands=((15, 10), (31, 5)),
+        engaged_range=(11, 12)),
+    _CRTColumn(-4, -3,
+        att_bands=((15, 30), (33, 25), (44, 20), (54, 15), (66, 10)),
+        def_bands=((13, 10), (23, 5)),
+        engaged_range=(10, 12)),
+    _CRTColumn(-2, -1,
+        att_bands=((12, 30), (26, 25), (42, 20), (52, 15), (66, 10)),
+        def_bands=((13, 10), (22, 5)),
+        engaged_range=(10, 12)),
+    _CRTColumn(0, 0,
+        att_bands=((12, 25), (24, 20), (36, 15), (51, 10), (66, 5)),
+        def_bands=((12, 15), (21, 10), (33, 5)),
+        retreat_hexes=0),
+    _CRTColumn(1, 2,
+        att_bands=((12, 20), (16, 15), (31, 10), (66, 5)),
+        def_bands=((12, 20), (22, 15), (42, 10), (66, 5)),
+        retreat_hexes=1, captured_range=(2, 3)),
+    _CRTColumn(3, 4,
+        att_bands=((13, 15), (26, 10), (66, 5)),
+        def_bands=((14, 25), (25, 20), (42, 15), (54, 10), (66, 5)),
+        retreat_hexes=2, captured_range=(2, 4)),
+    _CRTColumn(5, 7,
+        att_bands=((12, 10), (66, 5)),
+        def_bands=((14, 30), (33, 25), (45, 20), (56, 15), (66, 10)),
+        retreat_hexes=2, captured_range=(2, 4)),
+    _CRTColumn(8, 10,
+        att_bands=((66, 5),),
+        def_bands=((12, 40), (22, 30), (36, 25), (46, 20), (56, 15), (66, 10)),
+        retreat_hexes=3, captured_range=(2, 4)),
+    _CRTColumn(11, 13,
+        att_bands=((66, 5),),
+        def_bands=((13, 40), (26, 30), (41, 25), (56, 20), (66, 15)),
+        retreat_hexes=3, captured_range=(2, 3)),
+    _CRTColumn(14, 16,
+        att_bands=((66, 5),),
+        def_bands=((12, 40), (22, 30), (35, 25), (54, 20), (66, 15)),
+        retreat_hexes=3, captured_range=(2, 3)),
+    _CRTColumn(17, 99,
+        att_bands=((66, 5),),
+        def_bands=((13, 50), (26, 40), (36, 30), (46, 25), (56, 20), (66, 15)),
+        retreat_hexes=3, captured_range=(2, 3)),
+)
+
+
+def _lookup_loss_pct(bands: tuple[tuple[int, int], ...], dice_roll: int) -> int:
+    """Find the loss percentage for a sequential dice roll in a band list."""
+    for dice_max, pct in bands:
+        if dice_roll <= dice_max:
+            return pct
+    return bands[-1][1] if bands else 0
+
+
+def _find_crt_column(differential: int) -> _CRTColumn:
+    for col in _CRT_COLUMNS:
+        if col.min_diff <= differential <= col.max_diff:
+            return col
+    if differential < _CRT_COLUMNS[0].min_diff:
+        return _CRT_COLUMNS[0]
+    return _CRT_COLUMNS[-1]
 
 
 def resolve_close_assault(
@@ -255,41 +328,55 @@ def resolve_close_assault(
 ) -> CloseAssaultResult:
     """Resolve a Close Assault on the CRT.
 
-    Case 15.7, 15.8 — Roll for losses, then roll for outcome
-    (Engaged / Retreat / Captured).
+    Case 15.7, 15.8 — Each side rolls sequential dice to determine
+    their loss percentage from their respective CRT column. Then a
+    2d6 sum determines Engaged/Retreat/Captured outcomes.
 
     Args:
         differential: Pre-computed AssaultDifferential.
         attacker_raw_total: Sum of all attacker Raw Close Assault Points.
         defender_raw_total: Sum of all defender Raw Close Assault Points.
-        dice: DiceRoller for both rolls.
+        dice: DiceRoller for all rolls.
 
     Returns:
         CloseAssaultResult with loss amounts and outcome.
     """
     final = differential.final_differential
-    att_pct, def_pct, retreat = _lookup_crt(final)
+    col = _find_crt_column(final)
 
-    # Roll for losses — sequential dice (Case 15.8).
-    loss_roll = dice.roll_concat()
+    # Each side rolls sequential dice for their loss percentage.
+    att_roll = dice.roll_concat()
+    def_roll = dice.roll_concat()
 
-    # Apply loss percentages.
+    att_pct = _lookup_loss_pct(col.att_bands, att_roll)
+    def_pct = _lookup_loss_pct(col.def_bands, def_roll)
+
     # Case 15.8: Attacker rounds UP, Defender rounds DOWN.
-    # Exception: Overrun → Defender rounds UP.
+    # Exception: Overrun (≥+11) → Defender rounds UP.
     att_losses = math.ceil(attacker_raw_total * att_pct / 100)
     if final >= 11:
         def_losses = math.ceil(defender_raw_total * def_pct / 100)
     else:
-        def_losses = int(defender_raw_total * def_pct / 100)  # floor
+        def_losses = int(defender_raw_total * def_pct / 100)
 
-    # Roll for outcome — summed dice.
+    # Roll for outcome — summed dice (2d6).
     outcome_roll = dice.roll_sum(2)
-    if final >= 1 and retreat > 0:
+    outcome = AssaultOutcome.NO_EFFECT
+    retreat = 0
+
+    if col.retreat_hexes > 0:
+        retreat = col.retreat_hexes
         outcome = AssaultOutcome.RETREAT
-    elif final <= -1:
-        outcome = AssaultOutcome.ENGAGED if outcome_roll >= 8 else AssaultOutcome.NO_EFFECT
-    else:
-        outcome = AssaultOutcome.NO_EFFECT
+
+    if col.engaged_range:
+        lo, hi = col.engaged_range
+        if lo <= outcome_roll <= hi:
+            outcome = AssaultOutcome.ENGAGED
+
+    if col.captured_range:
+        lo, hi = col.captured_range
+        if lo <= outcome_roll <= hi:
+            outcome = AssaultOutcome.CAPTURED
 
     # Case 15.9: Probes — Engaged results ignored.
     if differential.is_probe and outcome == AssaultOutcome.ENGAGED:
@@ -302,7 +389,7 @@ def resolve_close_assault(
         defender_raw_losses=def_losses,
         outcome=outcome,
         retreat_hexes=retreat,
-        dice_loss_roll=loss_roll,
+        dice_loss_roll=att_roll,
         dice_outcome_roll=outcome_roll,
         differential=final,
     )
