@@ -6,8 +6,10 @@ for interactive TUI (deferred; see CLAUDE.md).
 Modules:
   - views: Limited-intelligence view model (Case 3.6).
   - dashboard: Rich renderers for the game overview.
+  - app: Interactive game loop with keyboard input and Rich Live.
 """
 
+from cna.ui.app import App
 from cna.ui.dashboard import (
     build_layout,
     render_commands,
@@ -21,6 +23,7 @@ from cna.ui.dashboard import (
 from cna.ui.views import GameView, HexView, UnitView, build_view, project_unit
 
 __all__ = [
+    "App",
     "GameView",
     "HexView",
     "UnitView",
