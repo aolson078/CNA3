@@ -270,9 +270,45 @@ class App:
     # -- commands --------------------------------------------------------
 
     def _do_next_phase(self) -> None:
-        """Advance to the next phase via the PhaseDriver."""
+        """Advance to the next phase via the PhaseDriver.
+
+        Case 60.8 — After advancing, checks if the scenario has ended
+        (game_turn exceeds scenario_length_turns). If so, evaluates
+        victory conditions and logs the result.
+        """
         self._push_undo()
         self._driver.step()
+        self._check_end_of_game()
+
+    def _check_end_of_game(self) -> None:
+        """Check if the scenario has reached its end turn."""
+        end_turn = self.state.extras.get("scenario_length_turns")
+        if end_turn is None or self.state.game_turn <= end_turn:
+            return
+        from cna.data.scenarios.victory import (
+            check_graziani_victory,
+            check_italian_campaign_victory,
+            SCENARIO_ID_GRAZIANI,
+            SCENARIO_ID_ITALIAN_CAMPAIGN,
+        )
+        from cna.data.scenarios.operation_compass import (
+            SCENARIO_ID_GRAZIANI as SG,
+            SCENARIO_ID_ITALIAN_CAMPAIGN as SI,
+        )
+        sid = self.state.scenario_id
+        if sid == SG:
+            result = check_graziani_victory(self.state)
+        elif sid == SI:
+            result = check_italian_campaign_victory(self.state)
+        else:
+            return
+        winner = result.winner.value if result.winner else "Draw"
+        self.state.log(
+            f"GAME OVER: {winner} {result.level.value} victory — {result.reason}",
+            side=None,
+            category="victory",
+        )
+        self._running = False
 
     def _do_undo(self) -> None:
         """Pop the last undo snapshot."""
