@@ -35,15 +35,20 @@ from rich.live import Live
 from cna.engine.game_state import (
     GameState,
     HexCoord,
+    OperationsStage,
     Phase,
     Side,
 )
 from cna.engine.saves import save, load
 from cna.engine.sequence_of_play import PhaseDriver, PhaseStep, next_phase
+from cna.rules.capability_points import reset_stage_cp, award_idle_rp
 from cna.rules.initiative import (
     handle_initiative_declaration_phase,
     handle_initiative_determination_phase,
 )
+from cna.rules.land_movement import move_unit, validate_move, MoveResult
+from cna.rules.reserves import handle_reserve_release
+from cna.rules.special.weather import handle_weather_phase
 from cna.ui.dashboard import build_layout, render_commands
 from cna.ui.views import build_view
 
@@ -56,6 +61,7 @@ from cna.ui.views import build_view
 class Key(str, Enum):
     """Named keys the app recognizes."""
     NEXT = "n"
+    MOVE = "m"
     SAVE = "s"
     LOAD = "l"
     QUIT = "q"
@@ -129,6 +135,7 @@ def _can_use_raw_input() -> bool:
 
 _HINTS_NORMAL: list[tuple[str, str]] = [
     ("n", "next phase"),
+    ("m", "move unit"),
     ("arrows", "select hex"),
     ("tab", "cycle hexes"),
     ("v", "swap viewer"),
@@ -195,8 +202,45 @@ class App:
         )
         self._driver.register(
             Phase.INITIATIVE_DECLARATION,
-            handle_initiative_declaration_phase,
+            self._handle_initiative_declaration_with_stage_reset,
         )
+        self._driver.register(
+            Phase.WEATHER_DETERMINATION,
+            handle_weather_phase,
+        )
+        self._driver.register(
+            Phase.PATROL,
+            self._handle_end_of_player_turn,
+        )
+
+    def _handle_initiative_declaration_with_stage_reset(
+        self, state: GameState, step: PhaseStep,
+    ) -> None:
+        """Reset CP at stage start, then declare initiative.
+
+        Case 6.16 — CP reset at the start of each Operations Stage.
+        This handler fires on Initiative Declaration (first phase of
+        each stage), ensuring CP are cleared before any actions.
+        """
+        reset_stage_cp(state)
+        handle_initiative_declaration_phase(state, step)
+
+    def _handle_end_of_player_turn(
+        self, state: GameState, step: PhaseStep,
+    ) -> None:
+        """End-of-player-turn bookkeeping.
+
+        Case 6.24 — Award idle RP to units that spent 0 CP.
+        Case 18.2 — Auto-release reserves (simplified).
+        Fires at the Patrol Phase (last phase before player switch).
+        """
+        awarded = award_idle_rp(state, state.operations_stage)
+        if awarded:
+            state.log(
+                f"{len(awarded)} unit(s) earned idle reorganization",
+                category="cohesion",
+            )
+        handle_reserve_release(state, step)
 
     def _rebuild_hex_list(self):
         """Build a sorted list of hex coords for tab-cycling."""
@@ -313,6 +357,75 @@ class App:
         """Toggle the dashboard between Axis and Commonwealth POV."""
         self.viewer = self.state.enemy(self.viewer)
 
+    def _do_move(self) -> None:
+        """Move a friendly unit from the selected hex toward an adjacent hex.
+
+        In Layer 1, this implements a simple "pick first friendly unit,
+        move one hex toward the cursor direction" workflow. The full UI
+        would allow selecting specific units and multi-hex paths.
+
+        Movement is only allowed during Movement and Combat phase for the
+        active side. The unit moves toward the next occupied hex in the
+        tab-cycle direction (or stays if no valid move).
+        """
+        if self.selected is None:
+            self.state.log("No hex selected for movement", side=None, category="system")
+            return
+
+        if self.state.phase != Phase.MOVEMENT_AND_COMBAT:
+            self.state.log(
+                "Movement only during Movement & Combat phase",
+                side=None, category="system",
+            )
+            return
+
+        # Find a friendly unit at the selected hex.
+        active = self.state.active_side
+        friendly = [u for u in self.state.units_at(self.selected) if u.side == active]
+        if not friendly:
+            self.state.log(
+                f"No {active.value} units at selected hex",
+                category="system",
+            )
+            return
+
+        unit = friendly[0]
+
+        # Find the best adjacent hex to move into (first valid neighbor).
+        from cna.engine.hex_map import HexMap
+        hex_map = HexMap(self.state.map)
+        candidates = hex_map.neighbors_in_bounds(self.selected)
+        if not candidates:
+            self.state.log("No adjacent hexes to move to", category="system")
+            return
+
+        # Try each neighbor; pick the first valid move.
+        for target in candidates:
+            path = [self.selected, target]
+            errors = validate_move(self.state, unit, path)
+            if not errors:
+                self._push_undo()
+                try:
+                    result = move_unit(self.state, unit.id, path)
+                    self.selected = target
+                    cp_msg = f"{result.cp_spent} CP"
+                    if result.dp_earned:
+                        cp_msg += f", {result.dp_earned} DP"
+                    if result.stopped_by_zoc:
+                        cp_msg += " (stopped by ZoC)"
+                    self.state.log(
+                        f"{unit.name} → {target} ({cp_msg})",
+                        category="movement",
+                    )
+                except Exception as exc:
+                    self.state.log(f"Move failed: {exc}", side=None, category="system")
+                return
+
+        self.state.log(
+            f"No valid move for {unit.name} from {self.selected}",
+            category="system",
+        )
+
     # -- dispatch --------------------------------------------------------
 
     def _handle_key(self, key: Key) -> None:
@@ -320,6 +433,8 @@ class App:
         match key:
             case Key.NEXT:
                 self._do_next_phase()
+            case Key.MOVE:
+                self._do_move()
             case Key.SAVE:
                 self._do_save()
             case Key.LOAD:

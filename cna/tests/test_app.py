@@ -8,7 +8,7 @@ from pathlib import Path
 from rich.console import Console
 
 from cna.data.scenarios.operation_compass import build_grazianis_offensive
-from cna.engine.game_state import Phase, Side
+from cna.engine.game_state import Phase, Side, WeatherState
 from cna.rules.initiative import initiative_holder
 from cna.ui.app import App, Key
 
@@ -192,3 +192,78 @@ def test_render_after_all_commands():
         # Render should not raise.
         layout = app._render()
         assert layout is not None
+
+
+# ---------------------------------------------------------------------------
+# Weather handler integration
+# ---------------------------------------------------------------------------
+
+
+def test_weather_handler_fires():
+    app = _mk_app()
+    # Advance to Weather Determination phase (past pre-game + init declaration).
+    while app.state.phase != Phase.WEATHER_DETERMINATION:
+        app.step(Key.NEXT)
+    app.step(Key.NEXT)  # This triggers the weather handler.
+    # Weather should have been rolled.
+    weather_entries = [e for e in app.state.turn_log if e.category == "weather"]
+    assert len(weather_entries) >= 1
+
+
+# ---------------------------------------------------------------------------
+# CP reset at stage boundary
+# ---------------------------------------------------------------------------
+
+
+def test_cp_reset_at_stage_boundary():
+    app = _mk_app()
+    # Advance to Movement & Combat, spend CP on a unit.
+    while app.state.phase != Phase.MOVEMENT_AND_COMBAT:
+        app.step(Key.NEXT)
+    # Manually spend CP on a unit.
+    uid = next(iter(app.state.units.keys()))
+    app.state.units[uid].capability_points_spent = 5
+
+    # Advance past player B phases to the next Init Declaration.
+    for _ in range(50):
+        app.step(Key.NEXT)
+        if app.state.phase == Phase.INITIATIVE_DECLARATION:
+            break
+    # The handler fires when we step FROM Initiative Declaration.
+    app.step(Key.NEXT)
+    # Re-fetch unit from the (possibly deepcopy'd) state.
+    assert app.state.units[uid].capability_points_spent == 0
+
+
+# ---------------------------------------------------------------------------
+# Movement command
+# ---------------------------------------------------------------------------
+
+
+def test_move_outside_movement_phase():
+    app = _mk_app()
+    # At Initiative Determination, movement should not work.
+    log_len = len(app.state.turn_log)
+    app.step(Key.MOVE)
+    assert any("Movement only" in e.message for e in app.state.turn_log[log_len:])
+
+
+def test_move_during_movement_phase():
+    app = _mk_app()
+    # Advance to Movement & Combat phase.
+    while app.state.phase != Phase.MOVEMENT_AND_COMBAT:
+        app.step(Key.NEXT)
+    # Select a hex with a friendly unit.
+    active = app.state.active_side
+    friendly_hexes = [
+        u.position for u in app.state.units.values()
+        if u.side == active and u.position is not None
+    ]
+    if friendly_hexes:
+        app.selected = friendly_hexes[0]
+        old_pos = friendly_hexes[0]
+        app.step(Key.MOVE)
+        # Should have moved or logged a reason why not.
+        move_entries = [e for e in app.state.turn_log if e.category == "movement"]
+        no_move_entries = [e for e in app.state.turn_log if "No valid" in e.message or "No " in e.message]
+        assert len(move_entries) > 0 or len(no_move_entries) > 0
